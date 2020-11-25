@@ -5,13 +5,24 @@
 
     {{ Data }}
 
+#[non_exhaustive]
+pub struct Tone;
+
+impl Tone {
+    pub const DEFAULT: &'static str = "";
+    pub const LIGHT: &'static str = "\u{1F3FB}";
+    pub const MEDIUM_LIGHT: &'static str = "\u{1F3FC}";
+    pub const MEDIUM: &'static str = "\u{1F3FD}";
+    pub const MEDIUM_DARK: &'static str = "\u{1F3FE}";
+    pub const DARK: &'static str = "\u{1F3FF}";
+    pub const TONE_PLACE_HOLDER: &'static str = "@";
+}
 
 pub struct Emoji(&'static str);
-
 use std::fmt;
 impl fmt::Display for Emoji {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{})", self.0)
+        write!(f, "{}", self.0)
     }
 }
 
@@ -38,5 +49,57 @@ impl EmojiWithTone<'_> {
     pub const fn default_tone(mut self, tone: &'static str) -> Self {
         self.default_tone = tone;
         self
+    }
+
+    pub fn tone(self, tones: Vec<&str>) -> String {
+        if tones.len() == 0 {
+            self.to_string()
+        } else {
+            if tones.len() == 1 || self.two_toned_code.is_empty() {
+                if tones[0] == Tone::DEFAULT {
+                    self.one_toned_code
+                        .to_string()
+                        .replace(Tone::TONE_PLACE_HOLDER, self.default_tone)
+                } else {
+                    self.one_toned_code
+                        .to_string()
+                        .replace(Tone::TONE_PLACE_HOLDER, tones[0])
+                }
+            } else if tones.len() > 1 && !self.two_toned_code.is_empty() {
+                self.two_toned_code
+                    .replacen(
+                        Tone::TONE_PLACE_HOLDER,
+                        if tones[0] == Tone::DEFAULT {
+                            self.default_tone
+                        } else {
+                            tones[0]
+                        },
+                        1,
+                    )
+                    .replacen(
+                        Tone::TONE_PLACE_HOLDER,
+                        if tones[1] == Tone::DEFAULT {
+                            self.default_tone
+                        } else {
+                            tones[1]
+                        },
+                        1,
+                    )
+            } else {
+                self.to_string()
+            }
+        }
+    }
+}
+
+impl fmt::Display for EmojiWithTone<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.one_toned_code
+                .to_string()
+                .replace(Tone::TONE_PLACE_HOLDER, self.default_tone)
+        )
     }
 }
