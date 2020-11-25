@@ -1985,7 +1985,7 @@ impl EmojiWithTone<'_> {
         self
     }
 
-    pub fn tone(self, tones: Vec<&str>) -> String {
+    pub fn tone(&self, tones: Vec<&str>) -> String {
         if tones.len() == 0 {
             self.to_string()
         } else {
