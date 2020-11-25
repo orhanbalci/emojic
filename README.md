@@ -33,7 +33,7 @@ fn main() {
 }
 
 ```
-# :screen: Output
+# :printer: Output
 ```
 Hello 👋
 I'm 👨‍💻 from 🇹🇷
