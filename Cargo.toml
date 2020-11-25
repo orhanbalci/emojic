@@ -3,6 +3,13 @@ name = "emojic"
 version = "0.1.0"
 authors = ["orhanbalci@gmail.com <orhanbalci@gmail.com>"]
 edition = "2018"
+description = "Emoji constants"
+repository = "https://github.com/orhanbalci/emojic.git"
+homepage = "https://github.com/orhanbalci"
+keywords = ["emoji","unicode"]
+license = "MIT"
+readme = "README.md"
+categories = ["text processing"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -212,7 +212,7 @@ pub fn emoji_constant_line(emos: &Vec<Emoji>) -> String {
     //   println!("Emoji length {}", emos.len());
     match emos.len() {
         1 => format!(
-            r#"static {} :  Emoji = Emoji("{}"); // {}"#,
+            r#"pub static {} :  Emoji = Emoji("{}"); // {}"#,
             basic.constant, basic.code, basic.name
         ),
         6 => {
@@ -220,12 +220,12 @@ pub fn emoji_constant_line(emos: &Vec<Emoji>) -> String {
             let default_tone = default_tone(basic.code.clone(), one_toned_code.clone());
             if !default_tone.is_empty() {
                 format!(
-                    r#"static {} : EmojiWithTone = EmojiWithTone::one_toned("{}").default_tone("{}"); // {}"#,
+                    r#"pub static {} : EmojiWithTone = EmojiWithTone::one_toned("{}").default_tone("{}"); // {}"#,
                     basic.constant, one_toned_code, default_tone, basic.name
                 )
             } else {
                 format!(
-                    "static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\"); // {}",
+                    "pub static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\"); // {}",
                     basic.constant, one_toned_code, basic.name
                 )
             }
@@ -234,7 +234,7 @@ pub fn emoji_constant_line(emos: &Vec<Emoji>) -> String {
             let one_toned_code = replace_tones(emos[1].code.clone());
             let two_toned_code = replace_tones(emos[2].code.clone());
             format!(
-                "static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\").two_toned(\"{}\"); // {}",
+                "pub static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\").two_toned(\"{}\"); // {}",
                 basic.constant, one_toned_code, two_toned_code, basic.name
             )
         }
