@@ -1,0 +1,4 @@
+/target
+Cargo.lock
+/emojic-gen/.vscode
+/emojic-gen/target

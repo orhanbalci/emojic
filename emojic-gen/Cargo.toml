@@ -1,0 +1,16 @@
+[package]
+name = "emojic-gen"
+version = "0.1.0"
+authors = ["orhanbalci@gmail.com <orhanbalci@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { version = "0.10.8", features = ["blocking"] }
+regex = "1.4.2"
+lazy_static = "1.4.0"
+maplit = "1.0.2"
+inflections = "1.1.1"
+tera = "1"
+chrono = "0.4.19"
