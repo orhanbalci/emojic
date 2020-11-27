@@ -1,5 +1,5 @@
 # emojic :grinning: :laughing:
-Emoji constants for your rusty strings
+Emoji constants for your rusty strings. This crate is rustlang port of [emoji](https://github.com/enescakir/emoji) written by [@enescakir](https://github.com/enescakir/emoji)
 
 ![License](https://img.shields.io/github/license/orhanbalci/emojic.svg)
 
