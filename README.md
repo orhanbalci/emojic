@@ -41,3 +41,14 @@ Different skin tones default 👍 light 👌🏻 dark 🤙🏿
 Emojis with multiple skin tones.
 Both medium: 🧑🏽‍🤝‍🧑🏽 light and dark: 🧑🏻‍🤝‍🧑🏿
 ```
+
+This package contains emojis constants based on [Full Emoji List v13.0](https://unicode.org/Public/emoji/13.0/emoji-test.txt).
+```rust
+CALL_ME_HAND // 🤙
+CALL_ME_HAND.tone(vec![Tone::DARK]) // 🤙🏿
+```
+Also, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
+```rust
+alias::parse(":+1:") // 👍
+alias::parse(":100:") // 💯
+```
