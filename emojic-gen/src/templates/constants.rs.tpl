@@ -18,6 +18,7 @@ impl Tone {
     pub const TONE_PLACE_HOLDER: &'static str = "@";
 }
 
+#[derive(PartialEq,Debug)]
 pub struct Emoji(pub &'static str);
 use std::fmt;
 impl fmt::Display for Emoji {
