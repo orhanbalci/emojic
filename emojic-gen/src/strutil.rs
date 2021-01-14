@@ -1,7 +1,9 @@
 use lazy_static::lazy_static;
 use maplit::hashmap;
 use regex::Regex;
+use reqwest::IntoUrl;
 use std::collections::HashMap;
+use std::io::Read;
 
 lazy_static! {
     static ref NON_ALPHA_NUM_REGEX: Regex = Regex::new(r"[^\w\d]+").unwrap();
@@ -104,4 +106,15 @@ pub fn remove_spaces(mut inp: String) -> String {
 
 pub fn make_alias(inp: String) -> String {
     format!(":{}:", inp)
+}
+
+pub fn fetch_data<T: IntoUrl>(url: T) -> Result<Vec<u8>, reqwest::Error> {
+    let mut res = reqwest::blocking::get(url)?;
+    let mut body = Vec::new();
+    res.read_to_end(&mut body).unwrap();
+    if res.status().is_success() {
+        Ok(body)
+    } else {
+        res.error_for_status().map(|_| Vec::new())
+    }
 }

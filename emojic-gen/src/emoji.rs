@@ -1,9 +1,7 @@
 use super::strutil::*;
 use inflections::case::to_snake_case;
-use inflections::case::to_title_case;
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::char::from_u32;
 use std::collections::HashMap;
 use std::string::ToString;
 
@@ -83,8 +81,8 @@ impl Subgroup {
             self.constants.push(e.constant.to_owned());
         }
     }
-    pub fn get_emoji(&mut self, code: &str) -> Option<&mut Vec<Emoji>> {
-        self.emojis.get_mut(code)
+    pub fn get_emoji(&self, code: &str) -> Option<&Vec<Emoji>> {
+        self.emojis.get(code)
     }
 }
 #[derive(Clone, Debug)]

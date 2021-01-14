@@ -2,27 +2,23 @@
 #![recursion_limit = "256"]
 
 mod emoji;
+mod gemoji;
 mod strutil;
-use std::fmt;
-use emoji::{Emojis, Group, Subgroup};
+use emoji::Emojis;
+use inflections::case::to_snake_case;
 use lazy_static::lazy_static;
+use std::fmt;
 use std::fs::File;
-use std::io::Read;
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader, Write},
-    path::PathBuf,
-    time::SystemTime,
 };
 
 // mod constants;
 use tera::Context;
 use tera::Tera;
 
-use reqwest::IntoUrl;
-
 const EMOJI_URL: &str = "https://unicode.org/Public/emoji/13.0/emoji-test.txt";
-const CONSTANTS_FILE: &str = "constants.rs";
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
@@ -38,7 +34,6 @@ lazy_static! {
     };
 }
 
-
 pub struct Emojik(&'static str);
 
 impl fmt::Display for Emojik {
@@ -48,19 +43,12 @@ impl fmt::Display for Emojik {
 }
 
 fn main() {
-    let emoji_text = fetch_data(EMOJI_URL);
-    save_constants(generate_constants(&fetch_emojis().unwrap()));    
-}
-
-fn fetch_data<T: IntoUrl>(url: T) -> Result<Vec<u8>, reqwest::Error> {
-    let mut res = reqwest::blocking::get(url)?;
-    let mut body = Vec::new();
-    res.read_to_end(&mut body).unwrap();
-    if res.status().is_success() {
-        Ok(body)
-    } else {
-        res.error_for_status().map(|_| Vec::new())
-    }
+    //let emoji_text = strutil::fetch_data(EMOJI_URL);
+    let a = gemoji::fetch_gemoji();
+    dbg!(a);
+    let mut e = fetch_emojis().unwrap();
+    save_constants(generate_constants(&e));
+    save_aliasses(generate_aliases(&mut e, &gemoji::fetch_gemoji()));
 }
 
 fn read_lines<'a>(content: &Vec<u8>, mut f: impl FnMut(&mut str) -> ()) {
@@ -74,7 +62,7 @@ fn read_lines<'a>(content: &Vec<u8>, mut f: impl FnMut(&mut str) -> ()) {
 }
 
 fn fetch_emojis() -> Result<Emojis, String> {
-    let emoji_text = fetch_data(EMOJI_URL);
+    let emoji_text = strutil::fetch_data(EMOJI_URL);
     //     let emoji_text:Result<Vec<u8>,String> = Ok(r#"
     // # group: hede
     // # subgroup: family
@@ -126,7 +114,7 @@ pub fn generate_constants(e: &Emojis) -> String {
         res.push_str(&format!("\n// GROUP: {}\n", g.name));
         g.subgroups.iter().for_each(|s| {
             res.push_str(&format!("// SUBGROUP: {}\n", s.name));
-            s.emojis.iter().for_each(|(key, value)| {
+            s.emojis.iter().for_each(|(_key, value)| {
                 println!("Writing emoji {:?}", value);
                 res.push_str(&emoji::emoji_constant_line(value));
                 res.push_str("\n");
@@ -135,6 +123,37 @@ pub fn generate_constants(e: &Emojis) -> String {
     });
 
     res
+}
+
+pub fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> String {
+    let mut aliasses: Vec<String> = Vec::new();
+    let mut emoji_map: HashMap<String, String> = HashMap::new();
+
+    emoji.groups.iter_mut().for_each(|g| {
+        g.subgroups.iter_mut().for_each(|s| {
+            s.constants.iter().for_each(|c| {
+                let em = s.get_emoji(c).unwrap().iter().next().unwrap();
+                let alias = gemoji::make_alias(&to_snake_case(&em.constant));
+                aliasses.push(alias.clone());
+                emoji_map.insert(alias, em.code.clone());
+            });
+        })
+    });
+
+    gemojis.iter().for_each(|(key, val)| {
+        if !emoji_map.contains_key(key) {
+            emoji_map.insert(key.clone(), val.clone());
+            aliasses.push(key.clone());
+        }
+    });
+
+    aliasses[..].sort();
+    aliasses = aliasses
+        .iter_mut()
+        .map(|al| format!("(\"{}\" , \"{}\"),\n", al, emoji_map.get(al).unwrap()))
+        .collect::<Vec<String>>();
+
+    aliasses[..].join("")
 }
 
 fn save_constants(constants: String) {
@@ -152,6 +171,25 @@ fn save_constants(constants: String) {
         .render("constants.rs.tpl", &context)
         .expect("Failed to render");
     File::create("./constants.rs")
+        .unwrap()
+        .write_all(bytes.as_bytes());
+}
+
+fn save_aliasses(aliasses: String) {
+    let mut context = Context::new();
+
+    use chrono::{DateTime, Utc};
+    let now: DateTime<Utc> = Utc::now();
+
+    let today = format!("{}", now);
+    context.insert("Link", gemoji::GEMOJI_URL);
+    context.insert("Date", &today);
+    context.insert("Data", &aliasses);
+
+    let bytes = TEMPLATES
+        .render("alias.rs.tpl", &context)
+        .expect("Failed to render alias");
+    File::create("./alias.rs")
         .unwrap()
         .write_all(bytes.as_bytes());
 }
