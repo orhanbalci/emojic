@@ -42,6 +42,13 @@ impl Emojis {
     pub fn get_group(&mut self, gn: &str) -> Option<&mut Group> {
         self.groups.iter_mut().find(|g| (*g).name == gn)
     }
+    /// Sort the groups.
+    pub fn sort(&mut self) {
+        self.groups.sort_by_key(|g| g.name.clone());
+        for g in self.groups.iter_mut() {
+            g.sort();
+        }
+    }
 }
 
 pub struct Group {
@@ -61,6 +68,13 @@ impl Group {
     }
     pub fn get_subgroup(&mut self, sgn: &str) -> Option<&mut Subgroup> {
         self.subgroups.iter_mut().find(|g| (*g).name == sgn)
+    }
+    /// Sort the subgroups.
+    pub fn sort(&mut self) {
+        self.subgroups.sort_by_key(|s| s.name.clone());
+        for s in self.subgroups.iter_mut() {
+            s.sort();
+        }
     }
 }
 
@@ -83,6 +97,14 @@ impl Subgroup {
     }
     pub fn get_emoji(&self, code: &str) -> Option<&Vec<Emoji>> {
         self.emojis.get(code)
+    }
+    /// Sort the emojis.
+    pub fn sort(&mut self) {
+        self.constants.sort();
+    }
+    /// Returns the list of emojis as ordered iterator.
+    pub fn emoji_iter(&self) -> impl Iterator<Item = &Vec<Emoji>> {
+        self.constants.iter().map(move |c| &self.emojis[c])
     }
 }
 #[derive(Clone, Debug)]
@@ -205,26 +227,69 @@ pub fn default_tone(basic: String, toned: String) -> String {
     }
 }
 
+/// Returns a string containing the plain unicode grapheme as well as a list of the actual
+/// unicode code points.
+fn emoji_render_text(emoji: &Emoji) -> String {
+    format!(
+        "{} ({})",
+        emoji.code,
+        emoji
+            .code
+            .chars()
+            .map(|c| format!("U+{:04X}", c as u32))
+            .collect::<Vec<_>>()
+            .join(" ")
+    )
+}
+
 pub fn emoji_constant_line(emos: &Vec<Emoji>) -> String {
     let basic = &emos[0];
+
+    // Generate docs for the statics
+    let docs = if emos.len() == 1 {
+        // Single emoji
+        format!(
+            r#"#[doc="{} {}"]#[doc=""]#[doc="Rendered as: {}"]
+"#,
+            basic.name,
+            basic.code,
+            emoji_render_text(&basic),
+        )
+    } else {
+        // Emoji list
+        format!(
+            r#"#[doc="{} {}"]#[doc=""]#[doc="Rendered as:"]{}
+"#,
+            basic.name,
+            basic.code,
+            emos.iter()
+                .map(|e| { format!(r#"#[doc="- {}"]"#, emoji_render_text(e)) })
+                .collect::<String>()
+        )
+    };
+
     //   println!("Emoji length {}", emos.len());
     match emos.len() {
+        0 => {
+            // Should not appear
+            panic!("Found a emoji constant without emojis")
+        }
         1 => format!(
-            r#"pub static {} :  Emoji = Emoji("{}"); // {}"#,
-            basic.constant, basic.code, basic.name
+            r#"{}pub static {} :  Emoji = Emoji("{}"); // {}"#,
+            docs, basic.constant, basic.code, basic.name
         ),
         6 => {
             let one_toned_code = replace_tones(emos[1].code.clone());
             let default_tone = default_tone(basic.code.clone(), one_toned_code.clone());
             if !default_tone.is_empty() {
                 format!(
-                    r#"pub static {} : EmojiWithTone = EmojiWithTone::one_toned("{}").default_tone("{}"); // {}"#,
-                    basic.constant, one_toned_code, default_tone, basic.name
+                    r#"{}pub static {} : EmojiWithTone = EmojiWithTone::one_toned("{}").default_tone("{}"); // {}"#,
+                    docs, basic.constant, one_toned_code, default_tone, basic.name
                 )
             } else {
                 format!(
-                    "pub static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\"); // {}",
-                    basic.constant, one_toned_code, basic.name
+                    "{}pub static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\"); // {}",
+                    docs, basic.constant, one_toned_code, basic.name
                 )
             }
         }
@@ -232,10 +297,13 @@ pub fn emoji_constant_line(emos: &Vec<Emoji>) -> String {
             let one_toned_code = replace_tones(emos[1].code.clone());
             let two_toned_code = replace_tones(emos[2].code.clone());
             format!(
-                "pub static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\").two_toned(\"{}\"); // {}",
-                basic.constant, one_toned_code, two_toned_code, basic.name
+                "{}pub static {} : EmojiWithTone = EmojiWithTone::one_toned(\"{}\").two_toned(\"{}\"); // {}",
+                docs, basic.constant, one_toned_code, two_toned_code, basic.name
             )
         }
-        _ => String::new(),
+        _ => {
+            // Should not appear
+            panic!("Found a emoji constant with invalid count of emojis")
+        }
     }
 }
