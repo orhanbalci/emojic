@@ -47,6 +47,10 @@ fn main() {
     let a = gemoji::fetch_gemoji();
     dbg!(a);
     let mut e = fetch_emojis().unwrap();
+
+    println!("Sorting...");
+    e.sort();
+
     save_constants(generate_constants(&e));
     save_aliasses(generate_aliases(&mut e, &gemoji::fetch_gemoji()));
 }
@@ -114,7 +118,7 @@ pub fn generate_constants(e: &Emojis) -> String {
         res.push_str(&format!("\n// GROUP: {}\n", g.name));
         g.subgroups.iter().for_each(|s| {
             res.push_str(&format!("// SUBGROUP: {}\n", s.name));
-            s.emojis.iter().for_each(|(_key, value)| {
+            s.emoji_iter().for_each(|value| {
                 println!("Writing emoji {:?}", value);
                 res.push_str(&emoji::emoji_constant_line(value));
                 res.push_str("\n");
