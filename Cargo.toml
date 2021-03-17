@@ -1,6 +1,6 @@
 [package]
 name = "emojic"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["orhanbalci@gmail.com <orhanbalci@gmail.com>"]
 edition = "2018"
 description = "Emoji constants"
