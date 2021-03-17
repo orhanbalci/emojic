@@ -1,3 +1,4 @@
+use inflections::case::to_snake_case;
 use lazy_static::lazy_static;
 use maplit::hashmap;
 use regex::Regex;
@@ -6,6 +7,7 @@ use std::collections::HashMap;
 use std::io::Read;
 
 lazy_static! {
+    static ref TRIM_UNDERSCORE_REGEX: Regex = Regex::new(r"(:?^_+|_+$)").unwrap();
     static ref NON_ALPHA_NUM_REGEX: Regex = Regex::new(r"[^\w\d]+").unwrap();
     static ref WHITESPACE_REGEX: Regex = Regex::new(r"\s+").unwrap();
     static ref CHANGES: HashMap<&'static str, &'static str> = hashmap! {
@@ -104,8 +106,29 @@ pub fn remove_spaces(mut inp: String) -> String {
     inp
 }
 
+pub fn trim_underscores(mut inp: String) -> String {
+    inp = TRIM_UNDERSCORE_REGEX.replace_all(&inp, "").into();
+    inp
+}
+
 pub fn make_alias(inp: String) -> String {
     format!(":{}:", inp)
+}
+
+pub fn generate_constant(s: &str) -> String {
+    let mut c = clean(s.to_owned());
+    c = to_snake_case(&c.to_lowercase()).to_uppercase();
+    c = remove_spaces(c);
+    c = trim_underscores(c);
+    c
+}
+
+pub fn generate_module(s: &str) -> String {
+    let mut c = clean(s.to_owned());
+    c = to_snake_case(&c.to_lowercase());
+    c = remove_spaces(c);
+    c = trim_underscores(c);
+    c
 }
 
 pub fn fetch_data<T: IntoUrl>(url: T) -> Result<Vec<u8>, reqwest::Error> {
