@@ -21,7 +21,7 @@ use std::{
 use tera::Context;
 use tera::Tera;
 
-const EMOJI_URL: &str = "https://unicode.org/Public/emoji/13.0/emoji-test.txt";
+const EMOJI_URL: &str = "https://unicode.org/Public/emoji/13.1/emoji-test.txt";
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
@@ -50,7 +50,7 @@ fn main() {
     //let emoji_text = strutil::fetch_data(EMOJI_URL);
     let a = gemoji::fetch_gemoji();
     let mut e = fetch_emojis().unwrap();
-    dbg!(&a);
+    //dbg!(&a);
 
     println!("Sorting...");
     e.sort();
@@ -71,23 +71,17 @@ fn read_lines<'a>(content: &Vec<u8>, mut f: impl FnMut(&mut str) -> ()) {
 
 fn fetch_emojis() -> Result<Emojis, String> {
     let emoji_text = strutil::fetch_data(EMOJI_URL);
-    //     let emoji_text:Result<Vec<u8>,String> = Ok(r#"
-    // # group: hede
-    // # subgroup: family
-    // 1F3CC FE0F 200D 2642 FE0F                  ; fully-qualified     # 🏌️‍♂️ E4.0 man golfing
-    // 1F3CC 1F3FB 200D 2642 FE0F                 ; fully-qualified     # 🏌🏻‍♂️ E4.0 man golfing: light skin tone
-    // 1F3CC 1F3FC 200D 2642 FE0F                 ; fully-qualified     # 🏌🏼‍♂️ E4.0 man golfing: medium-light skin tone
-    // 1F3CC 1F3FD 200D 2642 FE0F                 ; fully-qualified     # 🏌🏽‍♂️ E4.0 man golfing: medium skin tone
-    // 1F3CC 1F3FE 200D 2642 FE0F                 ; fully-qualified     # 🏌🏾‍♂️ E4.0 man golfing: medium-dark skin tone
-    // 1F3CC 1F3FF 200D 2642 FE0F                 ; fully-qualified     # 🏌🏿‍♂️ E4.0 man golfing: dark skin tone
-    // "#.as_bytes().to_vec());
 
-    let mut emojis: Emojis = Emojis { groups: Vec::new() };
+    let mut emojis: Emojis = Emojis::default();
     let mut current_group: String = String::new();
     let mut current_sub_group: String = String::new();
 
     read_lines(&emoji_text.unwrap(), |line| {
-        if line.starts_with("# group:") {
+        let line = line.trim();
+        println!("Process: {:?}", line);
+        if line.is_empty() {
+            // Just ignore it
+        } else if line.starts_with("# group:") {
             let name = line.replace("# group:", "").trim().to_owned();
             emojis.append(name.to_owned()).unwrap();
             current_group = name.to_owned();
@@ -99,28 +93,25 @@ fn fetch_emojis() -> Result<Emojis, String> {
                 .append(name.to_owned())
                 .unwrap();
             current_sub_group = name.to_owned();
-        } else if !line.starts_with("#") {
-            let e = emoji::Emoji::new(line.to_owned());
+        } else if !line.starts_with('#') {
             //println!("Current group : {} subgroup {}", current_group,current_sub_group);
-            match e {
-                Some(k) => emojis
-                    .get_group(&current_group)
-                    .unwrap()
-                    .get_subgroup(&current_sub_group)
-                    .unwrap()
-                    .append(&k),
-                None => (),
-            }
+            emojis
+                .get_group(&current_group)
+                .unwrap()
+                .get_subgroup(&current_sub_group)
+                .unwrap()
+                .append_line(line);
         }
     });
     Ok(emojis)
 }
 
-fn emojis_for_sub_group_list(sub: &Subgroup) -> Vec<&str> {
+fn emojis_for_sub_group_list(sub: &Subgroup) -> Vec<String> {
     sub.constants
         .iter()
+        .flat_map(|c| sub.get_emoji(c).unwrap().default_grapheme())
+        .map(|s| s.to_string())
         .take(3)
-        .map(|c| sub.emojis[c][0].code.as_str())
         .collect()
 }
 
@@ -132,7 +123,7 @@ fn emojis_for_group(grp: &Group) -> String {
     grp.subgroups
         .iter()
         .take(3)
-        .map(|sub| emojis_for_sub_group_list(sub)[0])
+        .flat_map(|sub| emojis_for_sub_group_list(sub).get(0).cloned())
         .collect()
 }
 
@@ -151,18 +142,29 @@ pub fn generate_constants(e: &Emojis) -> String {
                 "pub mod {} {{ // {}::{}\n",
                 s.identifier, g.identifier, s.identifier
             ));
-            grouped.push_str("use crate::Emoji;\n");
-            grouped.push_str("use crate::EmojiWithTone;\n");
+            grouped.push_str("use crate::emojis::Emoji;\n");
+            grouped.push_str("use crate::emojis::Family;\n");
+            grouped.push_str("use crate::emojis::Gender;\n");
+            grouped.push_str("use crate::emojis::Hair;\n");
+            grouped.push_str("use crate::emojis::OneOrTwo;\n");
+            grouped.push_str("use crate::emojis::Pair;\n");
+            grouped.push_str("use crate::emojis::Tone;\n");
+            grouped.push_str("use crate::emojis::TonePair;\n");
+            //grouped.push_str("use crate::emojis::TonePairReduced;\n");
+            grouped.push_str("use crate::emojis::With;\n");
+            grouped.push_str("use crate::emojis::WithNoDef;\n");
 
             s.emoji_iter().for_each(|value| {
                 println!("Writing emoji {:?}", value);
-                grouped.push_str(&emoji::emoji_constant_line(value));
-                grouped.push_str("\n");
+                grouped.push_str(&value.to_source_code());
+                grouped.push('\n');
 
                 flat.push_str("#[doc(inline)]\n");
                 flat.push_str(&format!(
                     "pub use crate::grouped::{}::{}::{};\n",
-                    g.identifier, s.identifier, value[0].constant
+                    g.identifier,
+                    s.identifier,
+                    value.identifier()
                 ));
             });
             grouped.push_str(&format!("}} // {}::{}\n", g.identifier, s.identifier));
@@ -219,29 +221,44 @@ pub fn generate_constants(e: &Emojis) -> String {
 pub fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> String {
     let mut aliasses: Vec<String> = Vec::new();
     let mut emoji_map: HashMap<String, String> = HashMap::new();
+    let mut emoji_map_by_grapheme: HashMap<String, String> = HashMap::new();
 
     emoji.groups.iter_mut().for_each(|g| {
         g.subgroups.iter_mut().for_each(|s| {
             s.constants.iter().for_each(|c| {
-                let em = s.get_emoji(c).unwrap().iter().next().unwrap();
-                let alias = gemoji::make_alias(&to_snake_case(&em.constant));
-                aliasses.push(alias.clone());
-                emoji_map.insert(alias, em.code.clone());
+                let em = s.get_emoji(c).unwrap();
+                let alias = gemoji::make_alias(&to_snake_case(&em.identifier()));
+                if let Some(def) = em.default_grapheme() {
+                    aliasses.push(alias.clone());
+                    emoji_map.insert(alias, em.identifier().to_string());
+
+                    emoji_map_by_grapheme.insert(def.to_string(), em.identifier().to_string());
+                }
             });
         })
     });
 
     gemojis.iter().for_each(|(key, val)| {
         if !emoji_map.contains_key(key) {
-            emoji_map.insert(key.clone(), val.clone());
-            aliasses.push(key.clone());
+            if let Some(emoji) = emoji_map_by_grapheme.get(val) {
+                emoji_map.insert(key.clone(), emoji.clone());
+                aliasses.push(key.clone());
+            } else {
+                println!("Couldn't find emoji for {:?} ({})", key, val);
+            }
         }
     });
 
     aliasses[..].sort();
     aliasses = aliasses
         .iter_mut()
-        .map(|al| format!("(\"{}\" , \"{}\"),\n", al, emoji_map.get(al).unwrap()))
+        .map(|al| {
+            format!(
+                "(\"{}\" , &crate::flat::{} as &crate::Emoji),\n",
+                al,
+                emoji_map.get(al).unwrap()
+            )
+        })
         .collect::<Vec<String>>();
 
     aliasses[..].join("")
