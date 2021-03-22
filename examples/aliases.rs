@@ -3,8 +3,8 @@ fn print_alias(s: &str) {
 }
 
 fn main() {
-    print_alias(":+1:");
-    print_alias(":alien_monster:");
-    print_alias(":joy:");
-    print_alias(":rocket:");
+    print_alias(":+1:"); // 👍
+    print_alias(":alien_monster:"); // 👾
+    print_alias(":joy:"); // 😂
+    print_alias(":rocket:"); // 🚀
 }

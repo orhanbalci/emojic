@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 lazy_static!{
-    pub static ref GEMOJI_MAP: HashMap<&'static str, &'static str> = [
+    pub static ref GEMOJI_MAP: HashMap<&'static str, &'static crate::Emoji> = [
         {{ Data }}
     ].iter().copied().collect();
 }
