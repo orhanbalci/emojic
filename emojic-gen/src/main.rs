@@ -4,7 +4,10 @@
 mod emoji;
 mod gemoji;
 mod strutil;
+
 use emoji::Emojis;
+use emoji::Group;
+use emoji::Subgroup;
 use inflections::case::to_snake_case;
 use lazy_static::lazy_static;
 use std::fmt;
@@ -43,16 +46,17 @@ impl fmt::Display for Emojik {
 }
 
 fn main() {
+    println!("Fetching...");
     //let emoji_text = strutil::fetch_data(EMOJI_URL);
     let a = gemoji::fetch_gemoji();
-    dbg!(a);
     let mut e = fetch_emojis().unwrap();
+    dbg!(&a);
 
     println!("Sorting...");
     e.sort();
 
     save_constants(generate_constants(&e));
-    save_aliasses(generate_aliases(&mut e, &gemoji::fetch_gemoji()));
+    save_aliasses(generate_aliases(&mut e, &a));
 }
 
 fn read_lines<'a>(content: &Vec<u8>, mut f: impl FnMut(&mut str) -> ()) {
@@ -112,19 +116,102 @@ fn fetch_emojis() -> Result<Emojis, String> {
     Ok(emojis)
 }
 
+fn emojis_for_sub_group_list(sub: &Subgroup) -> Vec<&str> {
+    sub.constants
+        .iter()
+        .take(3)
+        .map(|c| sub.emojis[c][0].code.as_str())
+        .collect()
+}
+
+fn emojis_for_subgroup(sub: &Subgroup) -> String {
+    emojis_for_sub_group_list(sub).join("")
+}
+
+fn emojis_for_group(grp: &Group) -> String {
+    grp.subgroups
+        .iter()
+        .take(3)
+        .map(|sub| emojis_for_sub_group_list(sub)[0])
+        .collect()
+}
+
 pub fn generate_constants(e: &Emojis) -> String {
-    let mut res = String::new();
+    // Generate separate lists for flat & grouped
+    let mut flat = String::new();
+    let mut grouped = String::new();
+
     e.groups.iter().for_each(|g| {
-        res.push_str(&format!("\n// GROUP: {}\n", g.name));
+        grouped.push_str(&format!("\n/// {} {}\n", g.name, emojis_for_group(g)));
+        grouped.push_str(&format!("pub mod {} {{\n", g.identifier));
+
         g.subgroups.iter().for_each(|s| {
-            res.push_str(&format!("// SUBGROUP: {}\n", s.name));
+            grouped.push_str(&format!("\n/// {} {}\n", s.name, emojis_for_subgroup(s)));
+            grouped.push_str(&format!(
+                "pub mod {} {{ // {}::{}\n",
+                s.identifier, g.identifier, s.identifier
+            ));
+            grouped.push_str("use crate::Emoji;\n");
+            grouped.push_str("use crate::EmojiWithTone;\n");
+
             s.emoji_iter().for_each(|value| {
                 println!("Writing emoji {:?}", value);
-                res.push_str(&emoji::emoji_constant_line(value));
-                res.push_str("\n");
-            })
-        })
+                grouped.push_str(&emoji::emoji_constant_line(value));
+                grouped.push_str("\n");
+
+                flat.push_str("#[doc(inline)]\n");
+                flat.push_str(&format!(
+                    "pub use crate::grouped::{}::{}::{};\n",
+                    g.identifier, s.identifier, value[0].constant
+                ));
+            });
+            grouped.push_str(&format!("}} // {}::{}\n", g.identifier, s.identifier));
+        });
+        grouped.push_str(&format!("}} // {}\n", g.identifier));
     });
+
+    // Combine the list from above
+    let mut res = String::new();
+
+    res.push_str(
+        r#"
+/// Grouped list of all emojis with sub modules.
+///
+/// This module contains the same set of emojis as the [`crate::flat`] module, but
+/// categorized into their respective groups and subgroups via sub modules.
+/// This make it easier to browse all the emojis in an intelligible way.
+///
+/// # Examples
+///
+/// ```rust
+/// // prints: 🖼️
+/// println!("{}", emojic::grouped::activities::arts_and_crafts::FRAMED_PICTURE);
+/// ```
+	"#,
+    );
+    res.push_str("pub mod grouped {\n");
+    res.push_str(&grouped);
+    res.push_str("}\n");
+
+    res.push_str(
+        r#"
+/// Flat list of all emojis without sub modules.
+///
+/// This module contains the same set of emojis as the [`crate::grouped`] module, but
+/// without the sub modules. This make it a bit more messy but allows for shorter
+/// references from code.
+///
+/// # Examples
+///
+/// ```rust
+/// // prints: 🖼️
+/// println!("{}", emojic::flat::FRAMED_PICTURE);
+/// ```
+	"#,
+    );
+    res.push_str("pub mod flat {\n");
+    res.push_str(&flat);
+    res.push_str("}\n");
 
     res
 }

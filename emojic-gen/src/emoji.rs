@@ -6,8 +6,20 @@ use std::collections::HashMap;
 use std::string::ToString;
 
 lazy_static! {
+    /// Parses lines form the unicode Emoji test list as specified in [`crate::EMOJI_URL`]
+    ///
+    /// Should be compatible with Emoji 12.0, 12.1, 13.0, and 13.1
+    ///
+    /// Sample input:
+    /// ```
+    /// 1F3CC 1F3FB 200D 2642 FE0F                 ; fully-qualified     # 🏌🏻‍♂️ E4.0 man golfing: light skin tone
+    /// ```
+    ///
+    /// Output:
+    /// code: `1F3CC 1F3FB 200D 2642 FE0F`
+    /// name: `man golfing: light skin tone`
     static ref REMOJI: Regex = Regex::new(
-        r"^(?m)(?P<code>[A-Z\d ]+[A-Z\d])\s+;\s+(fully-qualified|component)\s+#\s+.+\s+E\d+\.\d+ (?P<name>.+)$"
+        r"^(?m)(?P<code>[A-Z\d ]+[A-Z\d])\s+;\s+(fully-qualified|component)\s+#\s+\S+\s+(?:E\d+\.\d+\s+)?(?P<name>.+)$"
     )
     .unwrap();
 
@@ -33,6 +45,7 @@ pub struct Emojis {
 impl Emojis {
     pub fn append(&mut self, name: String) -> Option<&mut Group> {
         let g = Group {
+            identifier: generate_module(&name),
             name: name,
             subgroups: Vec::new(),
         };
@@ -53,12 +66,14 @@ impl Emojis {
 
 pub struct Group {
     pub name: String,
+    pub identifier: String,
     pub subgroups: Vec<Subgroup>,
 }
 
 impl Group {
     pub fn append(&mut self, subgroup: String) -> Option<&mut Subgroup> {
         let sg = Subgroup {
+            identifier: generate_module(&subgroup),
             name: subgroup,
             emojis: HashMap::new(),
             constants: Vec::new(),
@@ -80,6 +95,7 @@ impl Group {
 
 pub struct Subgroup {
     pub name: String,
+    pub identifier: String,
     pub emojis: HashMap<String, Vec<Emoji>>,
     pub constants: Vec<String>,
 }
@@ -107,6 +123,7 @@ impl Subgroup {
         self.constants.iter().map(move |c| &self.emojis[c])
     }
 }
+
 #[derive(Clone, Debug)]
 pub struct Emoji {
     pub name: String,
@@ -176,10 +193,7 @@ impl Emoji {
         self.constant = c;
     }
     pub fn generate_constant(&mut self) {
-        let mut c = clean(self.constant.to_owned());
-        c = to_snake_case(&c.to_lowercase()).to_uppercase();
-        c = remove_spaces(c);
-        self.constant = c;
+        self.constant = generate_constant(&self.constant);
     }
     pub fn generate_unicode(&mut self) {
         println!("{}", self.code);
@@ -302,8 +316,18 @@ pub fn emoji_constant_line(emos: &Vec<Emoji>) -> String {
             )
         }
         _ => {
-            // Should not appear
-            panic!("Found a emoji constant with invalid count of emojis")
+            // Should not appear, but be a bit more graceful here.
+            eprintln!(
+                "WARNING: Found a emoji constant with invalid count of emojis: '{}' count: {}",
+                basic.name,
+                emos.len()
+            );
+
+            // Just assume that only the first one is a real emoji
+            format!(
+                r#"{}pub static {} :  Emoji = Emoji("{}"); // {}"#,
+                docs, basic.constant, basic.code, basic.name
+            )
         }
     }
 }
