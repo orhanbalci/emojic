@@ -1,7 +1,7 @@
 [package]
 name = "emojic"
-version = "0.2.2-alpha.0"
-authors = ["orhanbalci@gmail.com <orhanbalci@gmail.com>"]
+version = "0.3.0-alpha.0"
+authors = ["orhanbalci@gmail.com <orhanbalci@gmail.com>", "Cryptjar <cryptjar@junk.studio>"]
 edition = "2018"
 description = "Emoji constants"
 repository = "https://github.com/orhanbalci/emojic.git"
