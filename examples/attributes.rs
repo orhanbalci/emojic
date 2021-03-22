@@ -29,4 +29,8 @@ fn main() {
             .gender(Gender::Male)
             .tone(Tone::Dark)
     ); // 👱🏿‍♂️
+
+    // Would not compile
+    //println!("With tone: {}", PERSON.tone(Tone::Dark).tone(Tone::Light));
+    //println!("With tone: {}", ALIEN.tone(Tone::Dark));
 }

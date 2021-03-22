@@ -31,7 +31,7 @@ impl Tone {
         Self::Dark,
     ];
 
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             Self::Light => "light skin tone",
             Self::MediumLight => "medium-light skin tone",
@@ -55,7 +55,7 @@ pub struct TonePair {
 }
 impl TonePair {
     /// Returns the entry index for this pair
-    pub(crate) fn to_id(self) -> usize {
+    pub(crate) const fn to_id(self) -> usize {
         self.left as usize * Tone::ALL.len() + self.right as usize
     }
 }
@@ -138,13 +138,13 @@ impl Gender {
         (self, children).into()
     }
 
-    pub fn name_adults(self) -> &'static str {
+    pub const fn name_adults(self) -> &'static str {
         match self {
             Self::Male => "man",
             Self::Female => "woman",
         }
     }
-    pub fn name_children(self) -> &'static str {
+    pub const fn name_children(self) -> &'static str {
         match self {
             Self::Male => "boy",
             Self::Female => "girl",
@@ -174,14 +174,14 @@ impl Pair {
         (self, children).into()
     }
 
-    pub fn name_adults(self) -> &'static str {
+    pub const fn name_adults(self) -> &'static str {
         match self {
             Self::Males => "men",
             Self::Mixed => "man & woman",
             Self::Females => "women",
         }
     }
-    pub fn name_children(self) -> &'static str {
+    pub const fn name_children(self) -> &'static str {
         match self {
             Self::Males => "boys",
             Self::Mixed => "boy & girl",
@@ -220,7 +220,7 @@ impl OneOrTwo {
     ];
 
     /// Returns the entry index for this pair
-    pub(crate) fn to_id(self) -> usize {
+    pub(crate) const fn to_id(self) -> usize {
         match self {
             Self::One(Gender::Male) => 0,
             Self::One(Gender::Female) => 1,
@@ -234,13 +234,13 @@ impl OneOrTwo {
         (self, children).into()
     }
 
-    pub fn name_adults(self) -> &'static str {
+    pub const fn name_adults(self) -> &'static str {
         match self {
             Self::One(one) => one.name_adults(),
             Self::Two(two) => two.name_adults(),
         }
     }
-    pub fn name_children(self) -> &'static str {
+    pub const fn name_children(self) -> &'static str {
         match self {
             Self::One(one) => one.name_children(),
             Self::Two(two) => two.name_children(),
@@ -280,7 +280,7 @@ pub struct Family {
 }
 impl Family {
     /// Returns the entry index for this constellation
-    pub(crate) fn to_id(self) -> usize {
+    pub(crate) const fn to_id(self) -> usize {
         self.parents.to_id() * OneOrTwo::ALL.len() + self.children.to_id()
     }
 }
@@ -325,7 +325,7 @@ impl Hair {
         Self::Bald,
     ];
 
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             Self::Beard => "beard",
             Self::Bald => "no hair",
