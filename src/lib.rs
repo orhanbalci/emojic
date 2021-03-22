@@ -41,7 +41,7 @@ lazy_static! {
 /// );
 /// ```
 ///
-pub fn parse_alias(inp: &str) -> Option<&Emoji> {
+pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
     ALIAS_REGEX.captures(inp).and_then(|cap| {
         cap.iter()
             .next()?

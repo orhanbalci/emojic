@@ -228,11 +228,16 @@ pub fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -
             s.constants.iter().for_each(|c| {
                 let em = s.get_emoji(c).unwrap();
                 let alias = gemoji::make_alias(&to_snake_case(&em.identifier()));
+
+                // Add the graphemes of all variants
+                for (accessor, grapheme) in em.full_emoji_list() {
+                    emoji_map_by_grapheme.insert(grapheme.to_string(), accessor);
+                }
+
+                // Add an alias for the default name
                 if let Some(def) = em.default_grapheme() {
                     aliasses.push(alias.clone());
-                    emoji_map.insert(alias, em.identifier().to_string());
-
-                    emoji_map_by_grapheme.insert(def.to_string(), em.identifier().to_string());
+                    emoji_map.insert(alias, emoji_map_by_grapheme[def].clone());
                 }
             });
         })

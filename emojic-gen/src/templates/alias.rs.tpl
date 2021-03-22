@@ -6,6 +6,11 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
+use crate::Tone;
+use crate::Gender;
+use crate::Hair;
+use crate::Pair;
+
 lazy_static!{
     pub static ref GEMOJI_MAP: HashMap<&'static str, &'static crate::Emoji> = [
         {{ Data }}

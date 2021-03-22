@@ -357,6 +357,17 @@ impl PersonQualified {
             Self::Leaf(l) => l.to_type_n_value(accessor, variants),
         }
     }
+
+    pub fn to_accessor_n_grapheme<'a>(
+        &self,
+        accessor: &str,
+        variants: &'a HashMap<PersonKind, PersonVariant>,
+    ) -> Vec<(String, &'a str)> {
+        match self {
+            Self::Node(n) => n.to_accessor_n_grapheme(accessor, variants),
+            Self::Leaf(l) => l.to_accessor_n_grapheme(accessor, variants),
+        }
+    }
 }
 impl From<PersonQualifiedNode> for PersonQualified {
     fn from(node: PersonQualifiedNode) -> Self {
@@ -428,6 +439,27 @@ impl PersonQualifiedNode {
 
         (ty, value, docs)
     }
+
+    fn to_accessor_n_grapheme<'a>(
+        &self,
+        accessor: &str,
+        variants: &'a HashMap<PersonKind, PersonVariant>,
+    ) -> Vec<(String, &'a str)> {
+        // Process some super group
+
+        let mut list = Vec::new();
+
+        if let Some(def) = &self.def {
+            list.extend(def.to_accessor_n_grapheme(accessor, variants));
+        }
+
+        for (acc_val, sub) in &self.subs {
+            let sub_accessor = format!("{}.{}", accessor, acc_val);
+            list.extend(sub.to_accessor_n_grapheme(&sub_accessor, variants));
+        }
+
+        list
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -459,5 +491,23 @@ impl PersonQualifiedLeaf {
             ),
             emoji_render_single_example(&accessor, &variant.grapheme),
         )
+    }
+    fn to_accessor_n_grapheme<'a>(
+        &self,
+        accessor: &str,
+        variants: &'a HashMap<PersonKind, PersonVariant>,
+    ) -> Vec<(String, &'a str)> {
+        // Process the final fully qualified kind
+
+        debug_assert!(
+            variants.contains_key(&self.leaf),
+            "Variant not found: {:?} for {:?}, all: {:?}",
+            self.leaf,
+            accessor,
+            variants
+        );
+        let variant = &variants[&self.leaf];
+
+        vec![(accessor.into(), &variant.grapheme)]
     }
 }

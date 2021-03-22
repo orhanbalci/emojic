@@ -154,6 +154,13 @@ impl ToSourceCode for PersonEmoji {
         let first = variants.next().unwrap();
         variants.next().is_none().then(|| &first.grapheme as &str)
     }
+    fn full_emoji_list(&self) -> Vec<(String, &str)> {
+        if let Some(group) = &self.grouping {
+            group.to_accessor_n_grapheme(&self.identifier, &self.variants)
+        } else {
+            panic!("PersonEmoji must be scrubbed before it can be rendered!")
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
