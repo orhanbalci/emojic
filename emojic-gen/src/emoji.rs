@@ -433,6 +433,10 @@ impl ToSourceCode for Emoji {
     fn name(&self) -> &str {
         &self.name
     }
+    /// Returns a list of all addressable emojis as a set of access string and grapheme.
+    fn full_emoji_list(&self) -> Vec<(String, &str)> {
+        vec![(self.identifier.clone(), &self.grapheme)]
+    }
 }
 
 /// Represents an emoji that can be turned into source code.
@@ -453,6 +457,8 @@ pub trait ToSourceCode: std::fmt::Debug {
     fn default_grapheme(&self) -> Option<&str>;
     /// Returns the descriptive name of this emoji.
     fn name(&self) -> &str;
+    /// Returns a list of all addressable emojis as a set of access string and grapheme.
+    fn full_emoji_list(&self) -> Vec<(String, &str)>;
 }
 
 /// Returns a string containing the plain unicode grapheme as well as a list of the actual

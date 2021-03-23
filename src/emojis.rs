@@ -21,7 +21,7 @@ impl Emoji {
         Emoji { name, grapheme }
     }
 
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         &self.name
     }
 }
@@ -80,12 +80,12 @@ impl<M, T: Display> Display for With<M, T> {
 }
 
 impl<T> With<Tone, T> {
-    pub fn tone(&self, tone: Tone) -> &T {
+    pub const fn tone(&self, tone: Tone) -> &T {
         &self.entries[tone as usize]
     }
 }
 impl<T> WithNoDef<Tone, T> {
-    pub fn tone(&self, tone: Tone) -> &T {
+    pub const fn tone(&self, tone: Tone) -> &T {
         &self.entries[tone as usize]
     }
 }
@@ -128,23 +128,23 @@ impl<T> WithNoDef<TonePairReduced, T> {
 */
 
 impl<T> With<Gender, T> {
-    pub fn gender(&self, gender: Gender) -> &T {
+    pub const fn gender(&self, gender: Gender) -> &T {
         &self.entries[gender as usize]
     }
 }
 impl<T> WithNoDef<Gender, T> {
-    pub fn gender(&self, gender: Gender) -> &T {
+    pub const fn gender(&self, gender: Gender) -> &T {
         &self.entries[gender as usize]
     }
 }
 
 impl<T> With<Hair, T> {
-    pub fn hair(&self, hair: Hair) -> &T {
+    pub const fn hair(&self, hair: Hair) -> &T {
         &self.entries[hair as usize]
     }
 }
 impl<T> WithNoDef<Hair, T> {
-    pub fn hair(&self, hair: Hair) -> &T {
+    pub const fn hair(&self, hair: Hair) -> &T {
         &self.entries[hair as usize]
     }
 }
