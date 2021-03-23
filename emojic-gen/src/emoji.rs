@@ -2,6 +2,7 @@ use super::strutil::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
+use std::num::ParseIntError;
 use std::str::FromStr;
 use std::string::ToString;
 
@@ -25,9 +26,10 @@ lazy_static! {
     ///
     /// Output:
     /// code: `1F3CC 1F3FB 200D 2642 FE0F`
+    /// version: `4.0`
     /// name: `man golfing: light skin tone`
     static ref REMOJI: Regex = Regex::new(
-        r"^(?m)\s*(?P<code>[A-Z\d ]+[A-Z\d])\s+;\s+(fully-qualified|component)\s+#\s+\S+\s+(?:E\d+\.\d+\s+)?(?P<name>.+)$"
+        r"^(?m)\s*(?P<code>[A-Z\d ]+[A-Z\d])\s+;\s+(:?fully-qualified|component)\s+#\s+\S+\s+(?:E(?P<version>\d+\.\d+)\s+)?(?P<name>.+)$"
     )
     .unwrap();
 
@@ -56,6 +58,21 @@ lazy_static! {
     static ref ACTIVITY_WITH_COLON: Regex = Regex::new(r"^\s*(?P<activity>[^:\n]+):(?: (?P<adult_left>person|woman|man))?(?:(?:, | and )(?P<adult_right>person|woman|man))?(?:, (?P<child_left>child|boy|girl)(?:, (?P<child_right>child|boy|girl))?)?(?:,? (?P<skin_first>(?:medium-)?(?:light|medium|dark)) skin tone(?:,? (?P<skin_sec>(?:medium-)?(?:light|medium|dark)) skin tone)?)?(:?,? (?P<hair>bald|beard|blond|red|curly|white)(?: hair)?)?\s*$").unwrap();
 
 
+}
+
+impl FromStr for Version {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let [major, minor] = s.split('.').collect::<Vec<_>>().as_slice() {
+            Ok(Version(
+                FromStr::from_str(major)?,
+                FromStr::from_str(minor)?,
+            ))
+        } else {
+            panic!("Invalid version string format");
+        }
+    }
 }
 
 fn person_identifier(activity_pre: Option<&str>, activity_post: Option<&str>) -> String {
@@ -247,15 +264,25 @@ impl Subgroup {
             return;
         }
         if let Some(cap) = REMOJI.captures(&line) {
-            println!("{} Captures", cap.len());
-            if cap.len() < 4 {
-                println!("Too few captures! {}", line);
-            } else {
-                let code = cap["code"].to_owned();
-                let name = cap["name"].to_owned();
+            println!(
+                "Captures: {:?}, {:?}, {:?}",
+                cap.name("code").map(|s| s.as_str()), // unconditional
+                cap.name("version").map(|s| s.as_str()),
+                cap.name("name").map(|s| s.as_str()), // unconditional
+            );
+            let version = cap
+                .name("version")
+                .map(|s| s.as_str())
+                .map(FromStr::from_str)
+                .map(Result::ok)
+                .flatten()
+                .unwrap_or(Version(0, 0));
 
-                if let Some(pcap) = PERSON_WITH_ACTIVITY.captures(&name) {
-                    println!(
+            let code = cap["code"].to_owned();
+            let name = cap["name"].to_owned();
+
+            if let Some(pcap) = PERSON_WITH_ACTIVITY.captures(&name) {
+                println!(
 						"Found PERSON_WITH_ACTIVITY: {:?}&{:?} ({:?},{:?}|{:?},{:?}): ({:?},{:?}), {:?}",
 						&pcap.name("activity_pre").map(|s| s.as_str()),
 						&pcap.name("activity_post").map(|s| s.as_str()),
@@ -268,75 +295,76 @@ impl Subgroup {
 						&pcap.name("hair").map(|s| s.as_str()),
 					);
 
-                    let grapheme = generate_unicode(&code);
-                    let person = PersonEntry::parse(
-                        name.clone(),
-                        grapheme,
-                        person_identifier(
-                            pcap.name("activity_pre").map(|s| s.as_str()),
-                            pcap.name("activity_post").map(|s| s.as_str()),
-                        ),
-                        Some((
-                            &pcap["adult_left"],
+                let grapheme = generate_unicode(&code);
+                let person = PersonEntry::parse(
+                    name.clone(),
+                    grapheme,
+                    person_identifier(
+                        pcap.name("activity_pre").map(|s| s.as_str()),
+                        pcap.name("activity_post").map(|s| s.as_str()),
+                    ),
+                    version,
+                    Some((
+                        &pcap["adult_left"],
+                        pcap.name("adult_right").map(|s| s.as_str()),
+                        pcap.name("child_left")
+                            .map(|s| (s.as_str(), pcap.name("child_right").map(|s| s.as_str()))),
+                    )),
+                    pcap.name("skin_first")
+                        .map(|s| (s.as_str(), pcap.name("skin_sec").map(|s| s.as_str()))),
+                    pcap.name("hair").map(|s| s.as_str()),
+                );
+                self.append_person(person);
+            } else if let Some(pcap) = ACTIVITY_WITH_COLON.captures(&name) {
+                println!(
+                    "Found ACTIVITY_WITH_COLON: {:?} ({:?},{:?}|{:?},{:?}): ({:?},{:?}), {:?}",
+                    &pcap.name("activity").map(|s| s.as_str()), // unconditional
+                    &pcap.name("adult_left").map(|s| s.as_str()),
+                    &pcap.name("adult_right").map(|s| s.as_str()),
+                    &pcap.name("child_left").map(|s| s.as_str()),
+                    &pcap.name("child_right").map(|s| s.as_str()),
+                    &pcap.name("skin_first").map(|s| s.as_str()),
+                    &pcap.name("skin_sec").map(|s| s.as_str()),
+                    &pcap.name("hair").map(|s| s.as_str()),
+                );
+
+                let grapheme = generate_unicode(&code);
+                let person = PersonEntry::parse(
+                    name.clone(),
+                    grapheme,
+                    pcap["activity"].to_string(),
+                    version,
+                    pcap.name("adult_left").map(|s| s.as_str()).map(|left| {
+                        (
+                            left,
                             pcap.name("adult_right").map(|s| s.as_str()),
                             pcap.name("child_left").map(|s| {
                                 (s.as_str(), pcap.name("child_right").map(|s| s.as_str()))
                             }),
-                        )),
-                        pcap.name("skin_first")
-                            .map(|s| (s.as_str(), pcap.name("skin_sec").map(|s| s.as_str()))),
-                        pcap.name("hair").map(|s| s.as_str()),
-                    );
-                    self.append_person(person);
-                } else if let Some(pcap) = ACTIVITY_WITH_COLON.captures(&name) {
-                    println!(
-                        "Found ACTIVITY_WITH_COLON: {:?} ({:?},{:?}|{:?},{:?}): ({:?},{:?}), {:?}",
-                        &pcap.name("activity").map(|s| s.as_str()), // unconditional
-                        &pcap.name("adult_left").map(|s| s.as_str()),
-                        &pcap.name("adult_right").map(|s| s.as_str()),
-                        &pcap.name("child_left").map(|s| s.as_str()),
-                        &pcap.name("child_right").map(|s| s.as_str()),
-                        &pcap.name("skin_first").map(|s| s.as_str()),
-                        &pcap.name("skin_sec").map(|s| s.as_str()),
-                        &pcap.name("hair").map(|s| s.as_str()),
-                    );
+                        )
+                    }),
+                    pcap.name("skin_first")
+                        .map(|s| s.as_str())
+                        .zip(Some(pcap.name("skin_sec").map(|s| s.as_str()))),
+                    pcap.name("hair").map(|s| s.as_str()),
+                );
+                self.append_person(person);
+            } else {
+                println!("Not a person {:?}", name);
 
-                    let grapheme = generate_unicode(&code);
-                    let person = PersonEntry::parse(
-                        name.clone(),
-                        grapheme,
-                        pcap["activity"].to_string(),
-                        pcap.name("adult_left").map(|s| s.as_str()).map(|left| {
-                            (
-                                left,
-                                pcap.name("adult_right").map(|s| s.as_str()),
-                                pcap.name("child_left").map(|s| {
-                                    (s.as_str(), pcap.name("child_right").map(|s| s.as_str()))
-                                }),
-                            )
-                        }),
-                        pcap.name("skin_first")
-                            .map(|s| s.as_str())
-                            .zip(Some(pcap.name("skin_sec").map(|s| s.as_str()))),
-                        pcap.name("hair").map(|s| s.as_str()),
-                    );
-                    self.append_person(person);
+                let id = generate_constant(&extract_attr(&name));
+
+                let e = Emoji {
+                    identifier: id.clone(),
+                    name,
+                    since: version,
+                    grapheme: generate_unicode(&code),
+                };
+
+                if self.emojis.insert(id.clone(), e).is_none() {
+                    self.constants.push(id.clone());
                 } else {
-                    println!("Not a person {:?}", name);
-
-                    let id = generate_constant(&extract_attr(&name));
-
-                    let e = Emoji {
-                        identifier: id.clone(),
-                        name,
-                        grapheme: generate_unicode(&code),
-                    };
-
-                    if self.emojis.insert(id.clone(), e).is_none() {
-                        self.constants.push(id.clone());
-                    } else {
-                        eprintln!("Found emoji twice: {}", id);
-                    }
+                    eprintln!("Found emoji twice: {}", id);
                 }
             }
         } else {
@@ -394,6 +422,7 @@ fn generate_unicode(code: &str) -> String {
 pub struct Emoji {
     pub name: String,
     pub identifier: String,
+    pub since: Version,
     pub grapheme: String,
 }
 
@@ -405,10 +434,11 @@ impl ToSourceCode for Emoji {
         let docs = {
             // Single emoji
             format!(
-                r#"#[doc="{} {}"]#[doc=""]{}
+                r#"#[doc="{} {}"]#[doc=""]#[doc="Since E{}"]#[doc=""]{}
 "#,
                 basic.name,
                 basic.grapheme,
+                basic.since,
                 emoji_render_example_section(
                     &emoji_render_single_example(&basic.identifier, &basic.grapheme),
                     &basic.identifier
@@ -417,8 +447,8 @@ impl ToSourceCode for Emoji {
         };
 
         format!(
-            r#"{}pub static {} :  Emoji = Emoji::new({:?}, "{}"); // {}"#,
-            docs, basic.identifier, basic.name, basic.grapheme, basic.name
+            r#"{}pub static {} :  Emoji = Emoji::new({:?}, {:?}, "{}"); // {}"#,
+            docs, basic.identifier, basic.name, basic.since, basic.grapheme, basic.name
         )
     }
     fn identifier(&self) -> &str {

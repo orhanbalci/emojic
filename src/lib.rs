@@ -66,7 +66,7 @@ pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
 /// use emojic::contry_flag;
 ///
 /// assert_eq!(contry_flag("EU"), emojic::flat::FLAG_EUROPEAN_UNION.to_string()); // 🇪🇺
-///	println!("{}", contry_flag("ZZ")); // 🇿🇿 (an invalid flag)
+/// println!("{}", contry_flag("ZZ")); // 🇿🇿 (an invalid flag)
 /// ```
 pub fn contry_flag(country_code: &str) -> String {
     assert!(
@@ -101,7 +101,7 @@ pub fn contry_flag(country_code: &str) -> String {
 /// use emojic::regional_flag;
 ///
 /// assert_eq!(regional_flag("GB-ENG"), emojic::flat::FLAG_ENGLAND.to_string()); // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 (England region of United Kingdom (GB))
-///	println!("{}", regional_flag("ZZ-ABC")); // 🏴󠁺󠁺󠁡󠁢󠁣󠁿 (an invalid flag)
+/// println!("{}", regional_flag("ZZ-ABC")); // 🏴󠁺󠁺󠁡󠁢󠁣󠁿 (an invalid flag)
 /// ```
 pub fn regional_flag(regional_code: &str) -> String {
     assert!(

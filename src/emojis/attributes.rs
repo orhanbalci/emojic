@@ -2,6 +2,17 @@
 //! Contains various emoji attributes.
 //!
 
+use std::fmt;
+
+/// Unicode Emoji version.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Version(pub u64, pub u64);
+impl fmt::Display for Version {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}.{}", self.0, self.1)
+    }
+}
+
 /// Skin tone attribute 🖐️🖐🏻🖐🏼🖐🏽🖐🏾🖐🏿
 ///
 /// Allows to specify the skin tone of supported emojis. Generally speaking, those involving people

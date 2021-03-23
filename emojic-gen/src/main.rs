@@ -153,6 +153,7 @@ pub fn generate_constants(e: &Emojis) -> String {
             //grouped.push_str("use crate::emojis::TonePairReduced;\n");
             grouped.push_str("use crate::emojis::With;\n");
             grouped.push_str("use crate::emojis::WithNoDef;\n");
+            grouped.push_str("use crate::emojis::Version;\n");
 
             s.emoji_iter().for_each(|value| {
                 println!("Writing emoji {:?}", value);
