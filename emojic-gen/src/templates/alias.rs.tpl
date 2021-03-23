@@ -10,6 +10,9 @@ use crate::Tone;
 use crate::Gender;
 use crate::Hair;
 use crate::Pair;
+use crate::emojis::OneOrTwo;
+use crate::emojis::TonePair;
+use crate::emojis::Family;
 
 lazy_static!{
     pub static ref GEMOJI_MAP: HashMap<&'static str, &'static crate::Emoji> = [

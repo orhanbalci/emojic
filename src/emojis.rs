@@ -50,7 +50,7 @@ impl<M, T> WithNoDef<M, T> {
 
 #[derive(Debug, Clone, Copy)]
 pub struct With<M, T: 'static> {
-    default: T,
+    pub default: T,
     entries: &'static [T],
     _m: std::marker::PhantomData<M>,
 }
@@ -91,19 +91,19 @@ impl<T> WithNoDef<Tone, T> {
 }
 
 impl<T> With<TonePair, T> {
-    pub fn tone(&self, tone: Tone) -> &T {
-        self.tone_pair((tone, tone))
+    pub fn tone(&self, tone: impl Into<TonePair>) -> &T {
+        self.tone_pair(tone.into())
     }
-    pub fn tone_pair(&self, tone_pair: impl Into<TonePair>) -> &T {
-        &self.entries[tone_pair.into().to_id()]
+    pub const fn tone_pair(&self, tone_pair: TonePair) -> &T {
+        &self.entries[tone_pair.to_id()]
     }
 }
 impl<T> WithNoDef<TonePair, T> {
-    pub fn tone(&self, tone: Tone) -> &T {
-        self.tone_pair((tone, tone))
+    pub fn tone(&self, tone: impl Into<TonePair>) -> &T {
+        self.tone_pair(tone.into())
     }
-    pub fn tone_pair(&self, tone_pair: impl Into<TonePair>) -> &T {
-        &self.entries[tone_pair.into().to_id()]
+    pub const fn tone_pair(&self, tone_pair: TonePair) -> &T {
+        &self.entries[tone_pair.to_id()]
     }
 }
 
@@ -150,34 +150,52 @@ impl<T> WithNoDef<Hair, T> {
 }
 
 impl<T> With<Pair, T> {
-    pub fn pair(&self, pair: impl Into<Pair>) -> &T {
+    pub fn gender(&self, pair: impl Into<Pair>) -> &T {
         &self.entries[pair.into() as usize]
+    }
+    pub const fn pair(&self, pair: Pair) -> &T {
+        &self.entries[pair as usize]
     }
 }
 impl<T> WithNoDef<Pair, T> {
-    pub fn pair(&self, pair: impl Into<Pair>) -> &T {
+    pub fn gender(&self, pair: impl Into<Pair>) -> &T {
         &self.entries[pair.into() as usize]
+    }
+    pub const fn pair(&self, pair: Pair) -> &T {
+        &self.entries[pair as usize]
     }
 }
 
 impl<T> With<OneOrTwo, T> {
-    pub fn pair(&self, oot: impl Into<OneOrTwo>) -> &T {
+    pub fn gender(&self, oot: impl Into<OneOrTwo>) -> &T {
         &self.entries[oot.into().to_id()]
+    }
+    pub const fn pair(&self, oot: OneOrTwo) -> &T {
+        &self.entries[oot.to_id()]
     }
 }
 impl<T> WithNoDef<OneOrTwo, T> {
-    pub fn pair(&self, oot: impl Into<OneOrTwo>) -> &T {
+    pub fn gender(&self, oot: impl Into<OneOrTwo>) -> &T {
         &self.entries[oot.into().to_id()]
+    }
+    pub const fn pair(&self, oot: OneOrTwo) -> &T {
+        &self.entries[oot.to_id()]
     }
 }
 
 impl<T> With<Family, T> {
-    pub fn family(&self, family: impl Into<Family>) -> &T {
+    pub fn gender(&self, family: impl Into<Family>) -> &T {
         &self.entries[family.into().to_id()]
+    }
+    pub const fn family(&self, family: Family) -> &T {
+        &self.entries[family.to_id()]
     }
 }
 impl<T> WithNoDef<Family, T> {
-    pub fn family(&self, family: impl Into<Family>) -> &T {
+    pub fn gender(&self, family: impl Into<Family>) -> &T {
         &self.entries[family.into().to_id()]
+    }
+    pub const fn family(&self, family: Family) -> &T {
+        &self.entries[family.to_id()]
     }
 }

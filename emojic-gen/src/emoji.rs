@@ -424,18 +424,22 @@ impl ToSourceCode for Emoji {
     fn identifier(&self) -> &str {
         &self.identifier
     }
-    fn graphemes(&self) -> String {
-        self.grapheme.to_string()
-    }
-    fn default_grapheme(&self) -> Option<&str> {
-        Some(&self.grapheme)
-    }
     fn name(&self) -> &str {
         &self.name
     }
-    /// Returns a list of all addressable emojis as a set of access string and grapheme.
-    fn full_emoji_list(&self) -> Vec<(String, &str)> {
-        vec![(self.identifier.clone(), &self.grapheme)]
+    fn full_emoji_list(&self) -> Vec<(String, String, &str)> {
+        vec![(
+            self.identifier.clone(),
+            self.identifier.clone(),
+            &self.grapheme,
+        )]
+    }
+    fn default_emoji_list(&self) -> Vec<(String, String, &str)> {
+        vec![(
+            self.identifier.clone(),
+            self.identifier.clone(),
+            &self.grapheme,
+        )]
     }
 }
 
@@ -443,22 +447,48 @@ impl ToSourceCode for Emoji {
 pub trait ToSourceCode: std::fmt::Debug {
     /// Returns the source code for a static definition.
     fn to_source_code(&self) -> String;
+
     /// Returns the identifier string.
     fn identifier(&self) -> &str;
+
+    /// Returns the descriptive name of this emoji.
+    fn name(&self) -> &str;
+
     /// Returns the default emoji graphemes (if there are multiple eligibles all are returned together.
     ///
     /// An example where there is no default is for the dancer emojis which consists of
     /// a male and female without a default.
-    fn graphemes(&self) -> String;
+    fn graphemes(&self) -> String {
+        self.default_emoji_list()
+            .into_iter()
+            .map(|(_, _, grapheme)| grapheme)
+            .collect()
+    }
+
     /// Return the default emoji grapheme if there is a unique one.
     ///
     /// An example where there is no default is for the dancer emojis which consists of
     /// a male and female without a default.
-    fn default_grapheme(&self) -> Option<&str>;
-    /// Returns the descriptive name of this emoji.
-    fn name(&self) -> &str;
-    /// Returns a list of all addressable emojis as a set of access string and grapheme.
-    fn full_emoji_list(&self) -> Vec<(String, &str)>;
+    fn default_grapheme(&self) -> Option<&str> {
+        let mut variants = self.default_emoji_list().into_iter();
+        // Fetch first variant
+        let first = variants.next().unwrap();
+        // ensure there is not a second 'default' variant
+        variants.next().is_none().then(|| first.2)
+    }
+
+    /// Return the default emoji or the most general emoji variants of this emoji.
+    ///
+    /// This function returns a list of constant accessor, public accessor, and grapheme for each
+    /// default emoji.
+    ///
+    /// An example where there is no default is for the dancer emojis where both the
+    /// male and female will be returned.
+    fn default_emoji_list(&self) -> Vec<(String, String, &str)>;
+
+    /// Returns a list of all addressable emojis as a set of const access string, public access
+    /// string, and grapheme.
+    fn full_emoji_list(&self) -> Vec<(String, String, &str)>;
 }
 
 /// Returns a string containing the plain unicode grapheme as well as a list of the actual

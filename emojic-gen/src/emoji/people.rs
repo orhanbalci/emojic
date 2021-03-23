@@ -43,19 +43,25 @@ impl PersonEmoji {
         }
     }
 
-    pub fn default_variants(&self) -> impl Iterator<Item = &PersonVariant> {
-        let mut most_general =
-            self.variants
-                .keys()
-                .fold(Vec::<PersonKind>::new(), |mut vec, var| {
-                    if vec.is_empty() || vec[0].default_level() == var.default_level() {
-                        vec.push(*var);
-                    } else if vec[0].default_level() < var.default_level() {
-                        vec.clear();
-                        vec.push(*var);
-                    }
-                    vec
-                });
+    pub fn default_variants(&self) -> impl Iterator<Item = (String, String, &PersonVariant)> {
+        let mut most_general = {
+            if let Some(group) = &self.grouping {
+                group.to_accessor_n_kind(&self.identifier).into_iter().fold(
+                    Vec::<(String, String, PersonKind)>::new(),
+                    |mut vec, (const_acc, pub_acc, kind)| {
+                        if vec.is_empty() || vec[0].2.default_level() == kind.default_level() {
+                            vec.push((const_acc, pub_acc, kind));
+                        } else if vec[0].2.default_level() < kind.default_level() {
+                            vec.clear();
+                            vec.push((const_acc, pub_acc, kind));
+                        }
+                        vec
+                    },
+                )
+            } else {
+                panic!("PersonEmoji must be scrubbed before it can be rendered!")
+            }
+        };
 
         most_general.sort();
         most_general.dedup();
@@ -67,7 +73,9 @@ impl PersonEmoji {
             self.variants
         );
 
-        most_general.into_iter().map(move |k| &self.variants[&k])
+        most_general
+            .into_iter()
+            .map(move |(c, p, k)| (c, p, &self.variants[&k]))
     }
 
     /// Check the total consistency of this emoji, and split it if it violates rules.
@@ -143,23 +151,23 @@ impl ToSourceCode for PersonEmoji {
     fn name(&self) -> &str {
         &self.fancy_name
     }
-    fn graphemes(&self) -> String {
-        self.default_variants()
-            .map(|v| &v.grapheme as &str)
-            .collect::<Vec<_>>()
-            .join("")
-    }
-    fn default_grapheme(&self) -> Option<&str> {
-        let mut variants = self.default_variants();
-        let first = variants.next().unwrap();
-        variants.next().is_none().then(|| &first.grapheme as &str)
-    }
-    fn full_emoji_list(&self) -> Vec<(String, &str)> {
+    fn full_emoji_list(&self) -> Vec<(String, String, &str)> {
         if let Some(group) = &self.grouping {
-            group.to_accessor_n_grapheme(&self.identifier, &self.variants)
+            group
+                .to_accessor_n_kind(&self.identifier)
+                .into_iter()
+                .map(|(const_acc, pub_acc, kind)| {
+                    (const_acc, pub_acc, self.variants[&kind].grapheme.as_str())
+                })
+                .collect()
         } else {
             panic!("PersonEmoji must be scrubbed before it can be rendered!")
         }
+    }
+    fn default_emoji_list(&self) -> Vec<(String, String, &str)> {
+        self.default_variants()
+            .map(|(const_acc, pub_acc, variant)| (const_acc, pub_acc, variant.grapheme.as_str()))
+            .collect()
     }
 }
 
