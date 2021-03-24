@@ -120,13 +120,13 @@ pub use constants::grouped;
 /// use emojic::parse_alias;
 ///
 /// assert_eq!(
-///     Some(emojic::flat::ALIEN_MONSTER.to_string()), //👾
-///     parse_alias(":alien_monster:").map(|e| e.to_string())
+///     Some(&emojic::flat::ALIEN_MONSTER),
+///     parse_alias(":alien_monster:") //👾
 /// );
 ///
 /// assert_eq!(
-///     Some(emojic::flat::THUMBS_UP.to_string()), //👍
-///     parse_alias(":+1:").map(|e| e.to_string())
+///     Some(&*emojic::flat::THUMBS_UP),
+///     parse_alias(":+1:") //👍
 /// );
 /// ```
 ///
