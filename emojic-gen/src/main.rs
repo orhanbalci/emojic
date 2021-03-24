@@ -10,6 +10,7 @@ use emoji::Group;
 use emoji::Subgroup;
 use inflections::case::to_snake_case;
 use lazy_static::lazy_static;
+use serde::Serialize;
 use std::fmt;
 use std::fs::File;
 use std::{
@@ -24,7 +25,7 @@ use tera::Tera;
 const EMOJI_URL: &str = "https://unicode.org/Public/emoji/13.1/emoji-test.txt";
 
 lazy_static! {
-    pub static ref TEMPLATES: Tera = {
+    static ref TEMPLATES: Tera = {
         let mut tera = match Tera::new("templates/**/*.tpl") {
             Ok(t) => t,
             Err(e) => {
@@ -37,7 +38,7 @@ lazy_static! {
     };
 }
 
-pub struct Emojik(&'static str);
+struct Emojik(&'static str);
 
 impl fmt::Display for Emojik {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -55,7 +56,10 @@ fn main() {
     println!("Sorting...");
     e.sort();
 
-    save_constants(generate_constants(&e));
+    let constants = generate_constants(&e);
+    save_flat_constants(&constants);
+    save_grouped_constants(&constants);
+
     save_aliasses(generate_aliases(&mut e, &a));
 }
 
@@ -127,194 +131,85 @@ fn emojis_for_group(grp: &Group) -> String {
         .collect()
 }
 
-pub fn generate_constants(e: &Emojis) -> String {
-    // Generate separate lists for flat & grouped
-    let mut flat = String::new();
-    let mut grouped = String::new();
-
-    let mut group_list = Vec::new();
-
-    e.groups.iter().for_each(|g| {
-		group_list.push(&g.identifier);
-
-		let mut subgroup_list = Vec::new();
-
-		grouped.push_str(&format!("\n/// {} {}\n", g.name, emojis_for_group(g)));
-		grouped.push_str(&format!("pub mod {} {{\n", g.identifier));
-
-		g.subgroups.iter().for_each(|s| {
-			subgroup_list.push(&s.identifier);
-
-			let mut emoji_full_list = String::new();
-			let mut emoji_def_list = String::new();
-
-			grouped.push_str(&format!("\n/// {} {}\n", s.name, emojis_for_subgroup(s)));
-			grouped.push_str(&format!(
-				"pub mod {} {{ // {}::{}\n",
-				s.identifier, g.identifier, s.identifier
-			));
-
-			// the use statements for this group module
-			grouped.push_str("use crate::emojis::Emoji;\n");
-			grouped.push_str("use crate::emojis::Family;\n");
-			grouped.push_str("use crate::emojis::Gender;\n");
-			grouped.push_str("use crate::emojis::Hair;\n");
-			grouped.push_str("use crate::emojis::OneOrTwo;\n");
-			grouped.push_str("use crate::emojis::Pair;\n");
-			grouped.push_str("use crate::emojis::Tone;\n");
-			grouped.push_str("use crate::emojis::TonePair;\n");
-			//grouped.push_str("use crate::emojis::TonePairReduced;\n");
-			grouped.push_str("use crate::emojis::With;\n");
-			grouped.push_str("use crate::emojis::WithNoDef;\n");
-            grouped.push_str("use crate::emojis::Version;\n");
-
-			s.emoji_iter().for_each(|value| {
-				println!("Writing emoji {:?}", value);
-				grouped.push_str(&value.to_source_code());
-				grouped.push('\n');
-
-				emoji_full_list.push_str("&[");
-				for (acc, _, _) in value.full_emoji_list() {
-					emoji_full_list.push_str(&format!("&{}, ", acc));
-				}
-				emoji_full_list.push_str("],\n");
-
-				for (acc, _, _) in value.default_emoji_list() {
-					emoji_def_list.push_str(&format!("&{}, ", acc));
-				}
-
-				flat.push_str("#[doc(inline)]\n");
-				flat.push_str(&format!(
-					"pub use crate::grouped::{}::{}::{};\n",
-					g.identifier,
-					s.identifier,
-					value.identifier()
-				));
-			});
-
-			grouped.push_str("pub(crate) static ALL_VARIANTS: &[&[&Emoji]] = &[\n");
-			grouped.push_str(&emoji_full_list);
-			grouped.push_str("];\n");
-
-			grouped.push_str("pub(crate) static ALL_BASE_EMOJI: &[&Emoji] = &[\n");
-			grouped.push_str(&emoji_def_list);
-			grouped.push_str("];\n");
-
-			grouped.push_str("
-/// Returns an iterator over all emoji variants of this subgroup grouped by base emojis
-pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {ALL_VARIANTS.iter().copied()}\n",
-			);
-
-			grouped.push_str("
-/// Returns an iterator over all base emojis of this subgroup (i.e. one for each static here)
-pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {ALL_BASE_EMOJI.iter().copied()}\n",
-			);
-
-			// close sub group
-			grouped.push_str(&format!("}} // {}::{}\n", g.identifier, s.identifier));
-		});
-
-			grouped.push_str("use crate::emojis::Emoji;\n");
-
-		grouped.push_str("
-/// Returns an iterator over all emoji variants of these subgroups grouped by base emojis
-pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
-	core::iter::empty()\n"
-		);
-		for subgroup in &subgroup_list {
-			grouped.push_str(&format!("\t\t.chain({}::all_variants())\n", subgroup));
-		}
-		grouped.push_str(
-			"}\n",
-		);
-
-		grouped.push_str("
-/// Returns an iterator over all base emojis of these subgroups (i.e. one for each static)
-pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {
-	core::iter::empty()\n"
-		);
-		for subgroup in &subgroup_list {
-			grouped.push_str(&format!("\t\t.chain({}::base_emojis())\n", subgroup));
-		}
-		grouped.push_str(
-			"}\n",
-		);
-
-		// close group
-		grouped.push_str(&format!("}} // {}\n", g.identifier));
-	});
-
-    grouped.push_str("use crate::emojis::Emoji;\n");
-
-    grouped.push_str(
-        "
-/// Returns an iterator over all emoji variants of all groups together grouped by base emojis
-pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
-	core::iter::empty()\n",
-    );
-    for group in &group_list {
-        grouped.push_str(&format!("\t\t.chain({}::all_variants())\n", group));
-    }
-    grouped.push_str("}\n");
-
-    grouped.push_str(
-        "
-/// Returns an iterator over all base emojis of all groups together (i.e. one for each static)
-pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {
-	core::iter::empty()\n",
-    );
-    for group in &group_list {
-        grouped.push_str(&format!("\t\t.chain({}::base_emojis())\n", group));
-    }
-    grouped.push_str("}\n");
-
-    // Combine the list from above
-    let mut res = String::new();
-
-    res.push_str(
-        r#"
-/// Grouped list of all emojis with sub modules.
-///
-/// This module contains the same set of emojis as the [`crate::flat`] module, but
-/// categorized into their respective groups and subgroups via sub modules.
-/// This make it easier to browse all the emojis in an intelligible way.
-///
-/// # Examples
-///
-/// ```rust
-/// // prints: 🖼️
-/// println!("{}", emojic::grouped::activities::arts_and_crafts::FRAMED_PICTURE);
-/// ```
-	"#,
-    );
-    res.push_str("pub mod grouped {\n");
-    res.push_str(&grouped);
-    res.push_str("}\n");
-
-    res.push_str(
-        r#"
-/// Flat list of all emojis without sub modules.
-///
-/// This module contains the same set of emojis as the [`crate::grouped`] module, but
-/// without the sub modules. This make it a bit more messy but allows for shorter
-/// references from code.
-///
-/// # Examples
-///
-/// ```rust
-/// // prints: 🖼️
-/// println!("{}", emojic::flat::FRAMED_PICTURE);
-/// ```
-	"#,
-    );
-    res.push_str("pub mod flat {\n");
-    res.push_str(&flat);
-    res.push_str("}\n");
-
-    res
+#[derive(Debug, Clone, Serialize)]
+struct GroupedConstant<'a> {
+    pub identifier: &'a str,
+    pub preview_emojis: String,
+    pub subgroups: Vec<SubgroupConstant<'a>>,
 }
 
-pub fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> String {
+#[derive(Debug, Clone, Serialize)]
+struct SubgroupConstant<'a> {
+    pub identifier: &'a str,
+    pub preview_emojis: String,
+    pub emojis: Vec<EmojiConstant<'a>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EmojiConstant<'a> {
+    pub identifier: &'a str,
+    pub preview_emojis: String,
+    pub source_code: String,
+    pub full_list_accessors: Vec<String>,
+    pub default_list_accessors: Vec<String>,
+}
+
+fn generate_constants(e: &Emojis) -> Vec<GroupedConstant> {
+    // Collect all groups
+    e.groups
+        .iter()
+        .map(|g| {
+            // Collect all subgroups
+            let subgroups = g
+                .subgroups
+                .iter()
+                .map(|s| {
+                    // Collect all emojis
+                    let emojis = s
+                        .emoji_iter()
+                        .map(|emoji| {
+                            println!("Writing emoji {:?}", emoji.identifier());
+
+                            let full_list_accessors = emoji
+                                .full_emoji_list()
+                                .into_iter()
+                                .map(|(acc, _, _)| acc)
+                                .collect();
+
+                            let default_list_accessors = emoji
+                                .default_emoji_list()
+                                .into_iter()
+                                .map(|(acc, _, _)| acc)
+                                .collect();
+
+                            EmojiConstant {
+                                identifier: emoji.identifier(),
+                                preview_emojis: emoji.graphemes(),
+                                source_code: emoji.to_source_code(),
+                                full_list_accessors,
+                                default_list_accessors,
+                            }
+                        })
+                        .collect();
+
+                    SubgroupConstant {
+                        identifier: &s.identifier,
+                        preview_emojis: emojis_for_subgroup(s),
+                        emojis,
+                    }
+                })
+                .collect();
+
+            GroupedConstant {
+                identifier: &g.identifier,
+                preview_emojis: emojis_for_group(g),
+                subgroups,
+            }
+        })
+        .collect()
+}
+
+fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> String {
     let mut aliasses: Vec<String> = Vec::new();
     let mut emoji_map: HashMap<String, String> = HashMap::new();
     let mut emoji_map_by_grapheme: HashMap<String, String> = HashMap::new();
@@ -365,7 +260,7 @@ pub fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -
     aliasses[..].join("")
 }
 
-fn save_constants(constants: String) {
+fn save_flat_constants(constants: &[GroupedConstant]) {
     let mut context = Context::new();
 
     use chrono::{DateTime, Utc};
@@ -374,12 +269,31 @@ fn save_constants(constants: String) {
     let today = format!("{}", now);
     context.insert("Link", EMOJI_URL);
     context.insert("Date", &today);
-    context.insert("Data", &constants);
+    context.insert("Constants", &constants);
 
     let bytes = TEMPLATES
-        .render("constants.rs.tpl", &context)
-        .expect("Failed to render");
-    File::create("./constants.rs")
+        .render("flat.tpl", &context)
+        .expect("Failed to render flat");
+    File::create("./flat.rs")
+        .unwrap()
+        .write_all(bytes.as_bytes());
+}
+
+fn save_grouped_constants(constants: &[GroupedConstant]) {
+    let mut context = Context::new();
+
+    use chrono::{DateTime, Utc};
+    let now: DateTime<Utc> = Utc::now();
+
+    let today = format!("{}", now);
+    context.insert("Link", EMOJI_URL);
+    context.insert("Date", &today);
+    context.insert("Constants", &constants);
+
+    let bytes = TEMPLATES
+        .render("grouped.tpl", &context)
+        .expect("Failed to render grouped");
+    File::create("./grouped.rs")
         .unwrap()
         .write_all(bytes.as_bytes());
 }
@@ -396,7 +310,7 @@ fn save_aliasses(aliasses: String) {
     context.insert("Data", &aliasses);
 
     let bytes = TEMPLATES
-        .render("alias.rs.tpl", &context)
+        .render("alias.tpl", &context)
         .expect("Failed to render alias");
     File::create("./alias.rs")
         .unwrap()

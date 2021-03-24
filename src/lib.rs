@@ -11,7 +11,10 @@ use alloc::string::String;
 mod alias; // Generated module
 
 #[rustfmt::skip]
-mod constants; // Generated module
+pub mod flat; // Generated module
+
+#[rustfmt::skip]
+pub mod grouped; // Generated module
 
 pub mod emojis;
 pub use emojis::Gender;
@@ -20,11 +23,6 @@ pub use emojis::Pair;
 pub use emojis::Tone;
 
 use emojis::Emoji;
-
-#[doc(inline)]
-pub use constants::flat;
-#[doc(inline)]
-pub use constants::grouped;
 
 /// Parses the given Emoji name into a unicode Emoji.
 ///
