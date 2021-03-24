@@ -1,5 +1,93 @@
 #![no_std]
 
+//!
+//! Emoji constants for your rusty strings. This crate is Rust port of Go library [emoji](https://github.com/enescakir/emoji) written by [@enescakir](https://github.com/enescakir)
+//!
+//!
+//! # 📦 Cargo.toml
+//!
+//! ```toml
+//! [dependencies]
+//! emojic = "0.3"
+//! ```
+//!
+//! # 🔧 Example
+//!
+//! ```rust
+//! use emojic::Gender;
+//! use emojic::Pair;
+//! use emojic::Tone;
+//! use emojic::flat::*;
+//!
+//! println!("Hello {}", WAVING_HAND);
+//! println!(
+//!     "I'm {} from {}",
+//!     TECHNOLOGIST.gender(Gender::Male),
+//!     FLAG_TURKEY
+//! );
+//! println!(
+//!     "Different skin tones default {} light {} dark {}",
+//!     THUMBS_UP,
+//!     OK_HAND.tone(Tone::Light),
+//!     CALL_ME_HAND.tone(Tone::Dark)
+//! );
+//! println!(
+//!     "Emojis with multiple skin tones.\nDefault: {}, both medium: {} light and dark: {}",
+//!     PERSON_HOLDING_HANDS,
+//!     PERSON_HOLDING_HANDS.tone(Tone::Medium),
+//!     PERSON_HOLDING_HANDS.tone((Tone::Light, Tone::Dark))
+//! );
+//! println!(
+//!     "Emojis with different sexes.\nMen: {}, women: {}, both: {}",
+//!     PERSON_HOLDING_HANDS.gender(Pair::Males),
+//!     PERSON_HOLDING_HANDS.gender(Pair::Females),
+//!     PERSON_HOLDING_HANDS.gender(Pair::Mixed),
+//! );
+//! println!(
+//!     "Emojis with sexes and skin tone.\nLight Men: {} and dark women: {}",
+//!     PERSON_HOLDING_HANDS.gender(Pair::Males).tone(Tone::Light),
+//!     PERSON_HOLDING_HANDS.gender(Pair::Females).tone(Tone::Dark),
+//! );
+//! ```
+//!
+//! # 🖨️ Output
+//!
+//! ```text
+//! Hello 👋
+//! I'm 👨‍💻 from 🇹🇷
+//! Different skin tones default 👍 light 👌🏻 dark 🤙🏿
+//! Emojis with multiple skin tones.
+//! Both medium: 🧑🏽‍🤝‍🧑🏽 light and dark: 🧑🏻‍🤝‍🧑🏿
+//! ```
+//!
+//! This package contains emojis constants based on [Full Emoji List v13.1](https://unicode.org/Public/emoji/13.1/emoji-test.txt).
+//!
+//! ```rust
+//! # use emojic::flat::CALL_ME_HAND;
+//! # use emojic::Tone;
+//! # assert_eq!("🤙",
+//! CALL_ME_HAND // 🤙
+//! # .grapheme);
+//! # assert_eq!("🤙🏿",
+//! CALL_ME_HAND.tone(Tone::Dark) // 🤙🏿
+//! # .grapheme);
+//! ```
+//!
+//! Also, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
+//!
+//! ```rust
+//! # use emojic::parse_alias;
+//! # assert_eq!(Some("👍"),
+//! parse_alias(":+1:") // 👍
+//! # .map(|e| e.grapheme));
+//! # assert_eq!(Some("💯"),
+//! parse_alias(":100:") // 💯
+//! # .map(|e| e.grapheme));
+//! ```
+//!
+//!
+//!
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
