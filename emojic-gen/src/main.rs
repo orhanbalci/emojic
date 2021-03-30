@@ -166,6 +166,7 @@ pub fn generate_constants(e: &Emojis) -> String {
 			//grouped.push_str("use crate::emojis::TonePairReduced;\n");
 			grouped.push_str("use crate::emojis::With;\n");
 			grouped.push_str("use crate::emojis::WithNoDef;\n");
+            grouped.push_str("use crate::emojis::Version;\n");
 
 			s.emoji_iter().for_each(|value| {
 				println!("Writing emoji {:?}", value);
@@ -218,7 +219,7 @@ pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {ALL_BASE_EMOJI.iter(
 		grouped.push_str("
 /// Returns an iterator over all emoji variants of these subgroups grouped by base emojis
 pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
-	std::iter::empty()\n"
+	core::iter::empty()\n"
 		);
 		for subgroup in &subgroup_list {
 			grouped.push_str(&format!("\t\t.chain({}::all_variants())\n", subgroup));
@@ -230,7 +231,7 @@ pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
 		grouped.push_str("
 /// Returns an iterator over all base emojis of these subgroups (i.e. one for each static)
 pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {
-	std::iter::empty()\n"
+	core::iter::empty()\n"
 		);
 		for subgroup in &subgroup_list {
 			grouped.push_str(&format!("\t\t.chain({}::base_emojis())\n", subgroup));
@@ -249,7 +250,7 @@ pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {
         "
 /// Returns an iterator over all emoji variants of all groups together grouped by base emojis
 pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
-	std::iter::empty()\n",
+	core::iter::empty()\n",
     );
     for group in &group_list {
         grouped.push_str(&format!("\t\t.chain({}::all_variants())\n", group));
@@ -260,7 +261,7 @@ pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
         "
 /// Returns an iterator over all base emojis of all groups together (i.e. one for each static)
 pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {
-	std::iter::empty()\n",
+	core::iter::empty()\n",
     );
     for group in &group_list {
         grouped.push_str(&format!("\t\t.chain({}::base_emojis())\n", group));

@@ -3,8 +3,10 @@
 // Source: {{ Link }}
 // Created at: {{ Date }}
 
+#![allow(unused_imports)]
+
 use lazy_static::lazy_static;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 use crate::Tone;
 use crate::Gender;

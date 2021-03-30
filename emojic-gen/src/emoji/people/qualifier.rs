@@ -572,8 +572,8 @@ impl PersonQualifiedLeaf {
         (
             "Emoji".to_string(),
             format!(
-                r#"Emoji::new({:?},"{}")"#,
-                variant.full_name, variant.grapheme
+                r#"Emoji::new({:?}, {:?},"{}")"#,
+                variant.full_name, variant.since, variant.grapheme
             ),
             emoji_render_single_example(&accessor, &variant.grapheme),
         )

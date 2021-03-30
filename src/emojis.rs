@@ -1,6 +1,7 @@
-use std::fmt;
-use std::fmt::Display;
-use std::ops::Deref;
+use core::fmt;
+use core::fmt::Display;
+use core::marker::PhantomData;
+use core::ops::Deref;
 
 mod attributes;
 pub use attributes::Family;
@@ -10,15 +11,21 @@ pub use attributes::OneOrTwo;
 pub use attributes::Pair;
 pub use attributes::Tone;
 pub use attributes::TonePair;
+pub use attributes::Version;
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
 pub struct Emoji {
     pub name: &'static str,
+    pub since: Version,
     pub grapheme: &'static str,
 }
 impl Emoji {
-    pub(crate) const fn new(name: &'static str, grapheme: &'static str) -> Self {
-        Emoji { name, grapheme }
+    pub(crate) const fn new(name: &'static str, since: Version, grapheme: &'static str) -> Self {
+        Emoji {
+            name,
+            since,
+            grapheme,
+        }
     }
 
     pub const fn name(&self) -> &'static str {
@@ -35,7 +42,7 @@ impl Display for Emoji {
 #[derive(Debug, Clone, Copy)]
 pub struct WithNoDef<M, T: 'static> {
     entries: &'static [T],
-    _m: std::marker::PhantomData<M>,
+    _m: PhantomData<M>,
 }
 
 impl<M, T> WithNoDef<M, T> {
@@ -43,7 +50,7 @@ impl<M, T> WithNoDef<M, T> {
         //assert_eq!(entries.len(), M::SIZE); invalid in const fn
         WithNoDef {
             entries,
-            _m: std::marker::PhantomData,
+            _m: PhantomData,
         }
     }
 }
@@ -52,7 +59,7 @@ impl<M, T> WithNoDef<M, T> {
 pub struct With<M, T: 'static> {
     pub default: T,
     entries: &'static [T],
-    _m: std::marker::PhantomData<M>,
+    _m: PhantomData<M>,
 }
 
 impl<M, T> With<M, T> {
@@ -61,7 +68,7 @@ impl<M, T> With<M, T> {
         With {
             default,
             entries,
-            _m: std::marker::PhantomData,
+            _m: PhantomData,
         }
     }
 }
