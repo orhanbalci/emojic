@@ -1,6 +1,7 @@
-use std::fmt;
-use std::fmt::Display;
-use std::ops::Deref;
+use core::fmt;
+use core::fmt::Display;
+use core::marker::PhantomData;
+use core::ops::Deref;
 
 mod attributes;
 pub use attributes::Family;
@@ -41,7 +42,7 @@ impl Display for Emoji {
 #[derive(Debug, Clone, Copy)]
 pub struct WithNoDef<M, T: 'static> {
     entries: &'static [T],
-    _m: std::marker::PhantomData<M>,
+    _m: PhantomData<M>,
 }
 
 impl<M, T> WithNoDef<M, T> {
@@ -49,7 +50,7 @@ impl<M, T> WithNoDef<M, T> {
         //assert_eq!(entries.len(), M::SIZE); invalid in const fn
         WithNoDef {
             entries,
-            _m: std::marker::PhantomData,
+            _m: PhantomData,
         }
     }
 }
@@ -58,7 +59,7 @@ impl<M, T> WithNoDef<M, T> {
 pub struct With<M, T: 'static> {
     default: T,
     entries: &'static [T],
-    _m: std::marker::PhantomData<M>,
+    _m: PhantomData<M>,
 }
 
 impl<M, T> With<M, T> {
@@ -67,7 +68,7 @@ impl<M, T> With<M, T> {
         With {
             default,
             entries,
-            _m: std::marker::PhantomData,
+            _m: PhantomData,
         }
     }
 }
