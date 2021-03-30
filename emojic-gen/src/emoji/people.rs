@@ -43,6 +43,10 @@ impl PersonEmoji {
         }
     }
 
+    pub fn since(&self) -> Version {
+        self.variants.values().map(|e| e.since).min().unwrap()
+    }
+
     pub fn default_variants(&self) -> impl Iterator<Item = &PersonVariant> {
         let mut most_general =
             self.variants
@@ -125,9 +129,10 @@ impl ToSourceCode for PersonEmoji {
         };
 
         source.push_str(&format!(
-            r#"#[doc="{} {}"]#[doc=""] {}"#,
+            r#"#[doc="{} {}"]#[doc=""]#[doc="Since E{}"]#[doc=""] {}"#,
             self.fancy_name,
             self.graphemes(),
+            self.since(),
             emoji_render_example_section(&docs, &self.identifier)
         ));
         source.push_str(&format!(
@@ -167,12 +172,14 @@ impl ToSourceCode for PersonEmoji {
 pub struct PersonVariant {
     full_name: String,
     grapheme: String,
+    since: Version,
 }
 impl From<Emoji> for PersonVariant {
     fn from(e: Emoji) -> Self {
         PersonVariant {
             full_name: e.name,
             grapheme: e.grapheme,
+            since: e.since,
         }
     }
 }
@@ -193,6 +200,7 @@ impl PersonEntry {
         full_name: String,
         grapheme: String,
         name: String,
+        since: Version,
         people: Option<(&str, Option<&str>, Option<(&str, Option<&str>)>)>,
         tone: Option<(&str, Option<&str>)>,
         hair: Option<&str>,
@@ -234,6 +242,7 @@ impl PersonEntry {
             variant: PersonVariant {
                 full_name,
                 grapheme,
+                since,
             },
         }
     }

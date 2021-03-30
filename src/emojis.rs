@@ -10,15 +10,21 @@ pub use attributes::OneOrTwo;
 pub use attributes::Pair;
 pub use attributes::Tone;
 pub use attributes::TonePair;
+pub use attributes::Version;
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
 pub struct Emoji {
     pub name: &'static str,
+    pub since: Version,
     pub grapheme: &'static str,
 }
 impl Emoji {
-    pub(crate) const fn new(name: &'static str, grapheme: &'static str) -> Self {
-        Emoji { name, grapheme }
+    pub(crate) const fn new(name: &'static str, since: Version, grapheme: &'static str) -> Self {
+        Emoji {
+            name,
+            since,
+            grapheme,
+        }
     }
 
     pub const fn name(&self) -> &'static str {
