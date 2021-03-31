@@ -1,17 +1,19 @@
 #![no_std]
 
 //!
-//! Emoji constants for your rusty strings. This crate is Rust port of Go library [emoji](https://github.com/enescakir/emoji) written by [@enescakir](https://github.com/enescakir)
+//! Emoji constants for your rusty strings. This crate is inspired by the Go library
+//! [emoji](https://github.com/enescakir/emoji) written by
+//! [@enescakir](https://github.com/enescakir).
 //!
 //!
-//! # 📦 Cargo.toml
+//! ## 📦 Cargo.toml
 //!
 //! ```toml
 //! [dependencies]
 //! emojic = "0.3"
 //! ```
 //!
-//! # 🔧 Example
+//! ## 🔧 Example
 //!
 //! ```rust
 //! use emojic::Gender;
@@ -32,48 +34,58 @@
 //!     CALL_ME_HAND.tone(Tone::Dark)
 //! );
 //! println!(
-//!     "Emojis with multiple skin tones.\nDefault: {}, both medium: {} light and dark: {}",
+//!     "Multiple skin tones: default: {}, same: {} different: {}",
 //!     PERSON_HOLDING_HANDS,
 //!     PERSON_HOLDING_HANDS.tone(Tone::Medium),
 //!     PERSON_HOLDING_HANDS.tone((Tone::Light, Tone::Dark))
 //! );
 //! println!(
-//!     "Emojis with different sexes.\nMen: {}, women: {}, both: {}",
-//!     PERSON_HOLDING_HANDS.gender(Pair::Males),
-//!     PERSON_HOLDING_HANDS.gender(Pair::Females),
-//!     PERSON_HOLDING_HANDS.gender(Pair::Mixed),
+//!     "Different sexes: default: {} male: {}, female: {}",
+//!     GENIE,
+//!     GENIE.gender(Gender::Male),
+//!     GENIE.gender(Gender::Female),
 //! );
 //! println!(
-//!     "Emojis with sexes and skin tone.\nLight Men: {} and dark women: {}",
-//!     PERSON_HOLDING_HANDS.gender(Pair::Males).tone(Tone::Light),
-//!     PERSON_HOLDING_HANDS.gender(Pair::Females).tone(Tone::Dark),
+//!     "Mixing attributes: men & light: {} and women & drak: {}",
+//!     PERSON_TIPPING_HAND.gender(Gender::Male).tone(Tone::Light),
+//!     PERSON_TIPPING_HAND.gender(Gender::Female).tone(Tone::Dark),
 //! );
 //! ```
 //!
-//! # 🖨️ Output
+//! ## 🖨️ Output
 //!
 //! ```text
 //! Hello 👋
 //! I'm 👨‍💻 from 🇹🇷
 //! Different skin tones default 👍 light 👌🏻 dark 🤙🏿
-//! Emojis with multiple skin tones.
-//! Both medium: 🧑🏽‍🤝‍🧑🏽 light and dark: 🧑🏻‍🤝‍🧑🏿
+//! Multiple skin tones: default: 🧑‍🤝‍🧑, same: 🧑🏽‍🤝‍🧑🏽 different: 🧑🏻‍🤝‍🧑🏿
+//! Different sexes: default: 🧞 male: 🧞‍♂️, female: 🧞‍♀️
+//! Mixing attributes: men & light: 💁🏻‍♂️ and women & drak: 💁🏿‍♀️
 //! ```
 //!
-//! This package contains emojis constants based on [Full Emoji List v13.1](https://unicode.org/Public/emoji/13.1/emoji-test.txt).
+//! This crate contains emojis constants based on the
+//! [Full Emoji List v13.1](https://unicode.org/Public/emoji/13.1/emoji-test.txt).
+//! Including its categorization:
 //!
 //! ```rust
-//! # use emojic::flat::CALL_ME_HAND;
-//! # use emojic::Tone;
-//! # assert_eq!("🤙",
-//! CALL_ME_HAND // 🤙
-//! # .grapheme);
-//! # assert_eq!("🤙🏿",
-//! CALL_ME_HAND.tone(Tone::Dark) // 🤙🏿
-//! # .grapheme);
+//! assert_eq!(
+//!     emojic::grouped::people_and_body::hands::OPEN_HANDS, //🤲
+//!     emojic::flat::OPEN_HANDS, //🤲
+//! );
 //! ```
 //!
-//! Also, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
+//! As well as iterators to list all the emojis in each group and subgroup:
+//!
+//! ```rust
+//! # let text =
+//! // Iterates all hand emoji: 👏, 🙏, 🤝, 👐, 🤲, 🙌
+//! emojic::grouped::people_and_body::hands::base_emojis()
+//! #    .map(|e| e.to_string())
+//! #    .collect::<String>();
+//! # assert_eq!("👏🙏🤝👐🤲🙌", text);
+//! ```
+//!
+//! Finally, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
 //!
 //! ```rust
 //! # use emojic::parse_alias;
@@ -83,8 +95,15 @@
 //! # assert_eq!(Some("💯"),
 //! parse_alias(":100:") // 💯
 //! # .map(|e| e.grapheme));
+//! # assert_eq!(Some("👩‍🚀"),
+//! parse_alias(":woman_astronaut:") // 👩‍🚀
+//! # .map(|e| e.grapheme));
 //! ```
 //!
+//! ## 🔭 Examples
+//!
+//! For more examples have a look at the
+//! [examples](https://github.com/orhanbalci/emojic/tree/master/examples) folder.
 //!
 //!
 
@@ -116,17 +135,26 @@ pub use constants::grouped;
 
 /// Parses the given Emoji name into a unicode Emoji.
 ///
+/// This function accepts strings of the form `:name:` and looks up an emojis for it.
+/// The list of valid names is taken from: [github/gemoji](https://github.com/github/gemoji)
+/// And additonally all the constant names (as listed in [`crate::flat`]) are also valid aliases
+/// when spelled in lowercase.
+///
+/// # Examples
+///
 /// ```
 /// use emojic::parse_alias;
 ///
-/// assert_eq!(
-///     Some(&emojic::flat::ALIEN_MONSTER),
-///     parse_alias(":alien_monster:") //👾
-/// );
-///
+/// // gemoji style
 /// assert_eq!(
 ///     Some(&*emojic::flat::THUMBS_UP),
 ///     parse_alias(":+1:") //👍
+/// );
+///
+/// // constant name style
+/// assert_eq!(
+///     Some(&emojic::flat::ALIEN_MONSTER),
+///     parse_alias(":alien_monster:") //👾
 /// );
 /// ```
 ///

@@ -43,7 +43,7 @@ pub use attributes::Version;
 /// };
 /// assert_eq!(emojic::flat::ARTIST_PALETTE, art);
 /// ```
-#[derive(PartialEq, Eq, Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Emoji {
     /// The full name of this emoji, much like a short description.
     pub name: &'static str,
@@ -52,9 +52,9 @@ pub struct Emoji {
     /// Notice, that since this stated version the recommended visuals may have changed or
     /// additional variants might have been added related to this emoji. In that case, the
     /// individual variants (which have their own `Emoji` instance) may have a different version
-    /// the the 'default' variant, depending on when they were first added.
+    /// than the 'default' variant, depending on when they were first added, respetively.
     pub since: Version,
-    /// The Unicode sequence of this emoji. The actual emoji.
+    /// The Unicode codepoint sequence of this emoji. The actual/rendered emoji.
     pub grapheme: &'static str,
 }
 impl Emoji {
@@ -82,7 +82,7 @@ impl Display for Emoji {
 ///
 /// Notice unlike the [`With`], this struct has no default variant and thus can not directly be
 /// used, instead customization is mandatory.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WithNoDef<M, T: 'static> {
     entries: &'static [T],
     _m: PhantomData<M>,
@@ -107,7 +107,7 @@ impl<M, T> WithNoDef<M, T> {
 ///
 /// Notice unlike the [`WithNoDef`], this struct has an default variant and thus `Deref`s to `T`,
 /// and implements `Display` if `T` does.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct With<M, T: 'static> {
     pub default: T,
     entries: &'static [T],
@@ -316,7 +316,7 @@ impl<T> WithNoDef<OneOrTwo, T> {
     }
 }
 
-/// Customizing by [`Family`] without defaults.
+/// Customizing by [`Family`].
 ///
 /// Notice that various type that implement `Into<Family>` such as `(Gender,Gender)`,
 /// and `(Pair,Pair)`.
