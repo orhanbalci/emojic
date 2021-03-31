@@ -132,46 +132,141 @@ pub fn generate_constants(e: &Emojis) -> String {
     let mut flat = String::new();
     let mut grouped = String::new();
 
-    e.groups.iter().for_each(|g| {
-        grouped.push_str(&format!("\n/// {} {}\n", g.name, emojis_for_group(g)));
-        grouped.push_str(&format!("pub mod {} {{\n", g.identifier));
+    let mut group_list = Vec::new();
 
-        g.subgroups.iter().for_each(|s| {
-            grouped.push_str(&format!("\n/// {} {}\n", s.name, emojis_for_subgroup(s)));
-            grouped.push_str(&format!(
-                "pub mod {} {{ // {}::{}\n",
-                s.identifier, g.identifier, s.identifier
-            ));
-            grouped.push_str("use crate::emojis::Emoji;\n");
-            grouped.push_str("use crate::emojis::Family;\n");
-            grouped.push_str("use crate::emojis::Gender;\n");
-            grouped.push_str("use crate::emojis::Hair;\n");
-            grouped.push_str("use crate::emojis::OneOrTwo;\n");
-            grouped.push_str("use crate::emojis::Pair;\n");
-            grouped.push_str("use crate::emojis::Tone;\n");
-            grouped.push_str("use crate::emojis::TonePair;\n");
-            //grouped.push_str("use crate::emojis::TonePairReduced;\n");
-            grouped.push_str("use crate::emojis::With;\n");
-            grouped.push_str("use crate::emojis::WithNoDef;\n");
+    e.groups.iter().for_each(|g| {
+		group_list.push(&g.identifier);
+
+		let mut subgroup_list = Vec::new();
+
+		grouped.push_str(&format!("\n/// {} {}\n", g.name, emojis_for_group(g)));
+		grouped.push_str(&format!("pub mod {} {{\n", g.identifier));
+
+		g.subgroups.iter().for_each(|s| {
+			subgroup_list.push(&s.identifier);
+
+			let mut emoji_full_list = String::new();
+			let mut emoji_def_list = String::new();
+
+			grouped.push_str(&format!("\n/// {} {}\n", s.name, emojis_for_subgroup(s)));
+			grouped.push_str(&format!(
+				"pub mod {} {{ // {}::{}\n",
+				s.identifier, g.identifier, s.identifier
+			));
+
+			// the use statements for this group module
+			grouped.push_str("use crate::emojis::Emoji;\n");
+			grouped.push_str("use crate::emojis::Family;\n");
+			grouped.push_str("use crate::emojis::Gender;\n");
+			grouped.push_str("use crate::emojis::Hair;\n");
+			grouped.push_str("use crate::emojis::OneOrTwo;\n");
+			grouped.push_str("use crate::emojis::Pair;\n");
+			grouped.push_str("use crate::emojis::Tone;\n");
+			grouped.push_str("use crate::emojis::TonePair;\n");
+			//grouped.push_str("use crate::emojis::TonePairReduced;\n");
+			grouped.push_str("use crate::emojis::With;\n");
+			grouped.push_str("use crate::emojis::WithNoDef;\n");
             grouped.push_str("use crate::emojis::Version;\n");
 
-            s.emoji_iter().for_each(|value| {
-                println!("Writing emoji {:?}", value);
-                grouped.push_str(&value.to_source_code());
-                grouped.push('\n');
+			s.emoji_iter().for_each(|value| {
+				println!("Writing emoji {:?}", value);
+				grouped.push_str(&value.to_source_code());
+				grouped.push('\n');
 
-                flat.push_str("#[doc(inline)]\n");
-                flat.push_str(&format!(
-                    "pub use crate::grouped::{}::{}::{};\n",
-                    g.identifier,
-                    s.identifier,
-                    value.identifier()
-                ));
-            });
-            grouped.push_str(&format!("}} // {}::{}\n", g.identifier, s.identifier));
-        });
-        grouped.push_str(&format!("}} // {}\n", g.identifier));
-    });
+				emoji_full_list.push_str("&[");
+				for (acc, _, _) in value.full_emoji_list() {
+					emoji_full_list.push_str(&format!("&{}, ", acc));
+				}
+				emoji_full_list.push_str("],\n");
+
+				for (acc, _, _) in value.default_emoji_list() {
+					emoji_def_list.push_str(&format!("&{}, ", acc));
+				}
+
+				flat.push_str("#[doc(inline)]\n");
+				flat.push_str(&format!(
+					"pub use crate::grouped::{}::{}::{};\n",
+					g.identifier,
+					s.identifier,
+					value.identifier()
+				));
+			});
+
+			grouped.push_str("pub(crate) static ALL_VARIANTS: &[&[&Emoji]] = &[\n");
+			grouped.push_str(&emoji_full_list);
+			grouped.push_str("];\n");
+
+			grouped.push_str("pub(crate) static ALL_BASE_EMOJI: &[&Emoji] = &[\n");
+			grouped.push_str(&emoji_def_list);
+			grouped.push_str("];\n");
+
+			grouped.push_str("
+/// Returns an iterator over all emoji variants of this subgroup grouped by base emojis
+pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {ALL_VARIANTS.iter().copied()}\n",
+			);
+
+			grouped.push_str("
+/// Returns an iterator over all base emojis of this subgroup (i.e. one for each static here)
+pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {ALL_BASE_EMOJI.iter().copied()}\n",
+			);
+
+			// close sub group
+			grouped.push_str(&format!("}} // {}::{}\n", g.identifier, s.identifier));
+		});
+
+			grouped.push_str("use crate::emojis::Emoji;\n");
+
+		grouped.push_str("
+/// Returns an iterator over all emoji variants of these subgroups grouped by base emojis
+pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
+	core::iter::empty()\n"
+		);
+		for subgroup in &subgroup_list {
+			grouped.push_str(&format!("\t\t.chain({}::all_variants())\n", subgroup));
+		}
+		grouped.push_str(
+			"}\n",
+		);
+
+		grouped.push_str("
+/// Returns an iterator over all base emojis of these subgroups (i.e. one for each static)
+pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {
+	core::iter::empty()\n"
+		);
+		for subgroup in &subgroup_list {
+			grouped.push_str(&format!("\t\t.chain({}::base_emojis())\n", subgroup));
+		}
+		grouped.push_str(
+			"}\n",
+		);
+
+		// close group
+		grouped.push_str(&format!("}} // {}\n", g.identifier));
+	});
+
+    grouped.push_str("use crate::emojis::Emoji;\n");
+
+    grouped.push_str(
+        "
+/// Returns an iterator over all emoji variants of all groups together grouped by base emojis
+pub fn all_variants() -> impl Iterator<Item=&'static [&'static Emoji]> {
+	core::iter::empty()\n",
+    );
+    for group in &group_list {
+        grouped.push_str(&format!("\t\t.chain({}::all_variants())\n", group));
+    }
+    grouped.push_str("}\n");
+
+    grouped.push_str(
+        "
+/// Returns an iterator over all base emojis of all groups together (i.e. one for each static)
+pub fn base_emojis() -> impl Iterator<Item=&'static Emoji> {
+	core::iter::empty()\n",
+    );
+    for group in &group_list {
+        grouped.push_str(&format!("\t\t.chain({}::base_emojis())\n", group));
+    }
+    grouped.push_str("}\n");
 
     // Combine the list from above
     let mut res = String::new();
@@ -231,8 +326,8 @@ pub fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -
                 let alias = gemoji::make_alias(&to_snake_case(&em.identifier()));
 
                 // Add the graphemes of all variants
-                for (accessor, grapheme) in em.full_emoji_list() {
-                    emoji_map_by_grapheme.insert(grapheme.to_string(), accessor);
+                for (const_accessor, pub_accessor, grapheme) in em.full_emoji_list() {
+                    emoji_map_by_grapheme.insert(grapheme.to_string(), const_accessor);
                 }
 
                 // Add an alias for the default name

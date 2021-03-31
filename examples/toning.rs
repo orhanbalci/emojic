@@ -26,18 +26,18 @@ fn main() {
     );
     println!(
         "PERSON_HOLDING_HANDS (Medium): {}",
-        PERSON_HOLDING_HANDS.tone_pair(Tone::Medium) // 🧑🏽‍🤝‍🧑🏽
+        PERSON_HOLDING_HANDS.tone(Tone::Medium) // 🧑🏽‍🤝‍🧑🏽
     );
     println!(
         "PERSON_HOLDING_HANDS (Medium,Medium): {}",
-        PERSON_HOLDING_HANDS.tone_pair((Tone::Medium, Tone::Medium)) // 🧑🏽‍🤝‍🧑🏽
+        PERSON_HOLDING_HANDS.tone((Tone::Medium, Tone::Medium)) // 🧑🏽‍🤝‍🧑🏽
     );
     println!(
         "PERSON_HOLDING_HANDS (Light,Dark): {}",
-        PERSON_HOLDING_HANDS.tone_pair((Tone::Light, Tone::Dark)) // 🧑🏻‍🤝‍🧑🏿
+        PERSON_HOLDING_HANDS.tone((Tone::Light, Tone::Dark)) // 🧑🏻‍🤝‍🧑🏿
     );
     println!(
         "PERSON_HOLDING_HANDS (Dark,Light): {}",
-        PERSON_HOLDING_HANDS.tone_pair((Tone::Dark, Tone::Light)) // 🧑🏿‍🤝‍🧑🏻
+        PERSON_HOLDING_HANDS.tone((Tone::Dark, Tone::Light)) // 🧑🏿‍🤝‍🧑🏻
     );
 }

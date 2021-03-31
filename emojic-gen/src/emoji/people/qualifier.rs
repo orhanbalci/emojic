@@ -25,12 +25,19 @@ impl OneOrTwo {
             Self::Two(p) => format!("Pair::{:?}", p),
         }
     }
+    fn fancy_full_source(self) -> String {
+        match self {
+            Self::One(g) => format!("OneOrTwo::One(Gender::{:?})", g),
+            Self::Two(p) => format!("OneOrTwo::Two(Pair::{:?})", p),
+        }
+    }
 }
 
 /// Specifies a qualified set of an attribute.
 pub struct QualifierSet<T> {
     set: Vec<T>,
     type_name: &'static str,
+    const_access_generator: Box<dyn Fn(T) -> String>,
     access_generator: Box<dyn Fn(T) -> String>,
     kind_translator: Option<Box<dyn Fn(PersonKindSelector) -> PersonKindSelector>>,
 }
@@ -39,26 +46,30 @@ impl<T> QualifierSet<T> {
     fn new(
         set: Vec<T>,
         type_name: &'static str,
+        const_access_generator: Box<dyn Fn(T) -> String>,
         access_generator: Box<dyn Fn(T) -> String>,
     ) -> Self {
         QualifierSet {
             set,
             type_name,
             access_generator,
+            const_access_generator,
             kind_translator: None,
         }
     }
     fn with_translator(
         set: Vec<T>,
         type_name: &'static str,
+        const_access_generator: Box<dyn Fn(T) -> String>,
         access_generator: Box<dyn Fn(T) -> String>,
         kind_translator: Box<dyn Fn(PersonKindSelector) -> PersonKindSelector>,
     ) -> Self {
         QualifierSet {
             set,
             type_name,
-            kind_translator: Some(kind_translator),
             access_generator,
+            const_access_generator,
+            kind_translator: Some(kind_translator),
         }
     }
 }
@@ -96,6 +107,7 @@ pub trait Qualifier: Sized + Clone {
             set,
             type_name,
             access_generator,
+            const_access_generator,
             kind_translator,
         } in allow_sets
         {
@@ -118,7 +130,13 @@ pub trait Qualifier: Sized + Clone {
                 subs.sort_by_key(|(k, _v)| *k);
                 let subs = subs
                     .into_iter()
-                    .map(|(k, v)| (access_generator(Self::get_selector(k).unwrap().unwrap()), v))
+                    .map(|(k, v)| {
+                        (
+                            const_access_generator(Self::get_selector(k).unwrap().unwrap()),
+                            access_generator(Self::get_selector(k).unwrap().unwrap()),
+                            v,
+                        )
+                    })
                     .collect();
 
                 let node = PersonQualifiedNode {
@@ -185,10 +203,17 @@ impl Qualifier for (Tone, Option<Tone>) {
                 "TonePair",
                 Box::new(|(a, b_opt): Self| {
                     let b = b_opt.unwrap();
-                    if a == b {
-                        format!("tone(Tone::{:?})", a)
+                    format!(
+                        "tone_pair(TonePair{{left: Tone::{:?}, right: Tone::{:?} }})",
+                        a, b
+                    )
+                }),
+                Box::new(|(a, b_opt): Self| {
+                    let b = b_opt.unwrap();
+                    if a != b {
+                        format!("tone((Tone::{:?}, Tone::{:?}))", a, b)
                     } else {
-                        format!("tone_pair((Tone::{:?}, Tone::{:?}))", a, b)
+                        format!("tone(Tone::{:?})", a)
                     }
                 }),
                 Box::new(|sel| {
@@ -206,12 +231,26 @@ impl Qualifier for (Tone, Option<Tone>) {
                 }),
             ),
             QualifierSet::new(
+                // Does not exist as of Unicode 13.1
                 reduced,
                 "TonePairReduced",
                 Box::new(|(a, b_opt): Self| {
                     if let Some(b) = b_opt {
+                        format!(
+                            "tone_pair(TonePair{{left: Tone::{:?}, right: Tone::{:?} }})",
+                            a, b
+                        )
+                    } else {
+                        format!(
+                            "tone_pair(TonePair{{left: Tone::{:?}, right: Tone::{:?} }})",
+                            a, a
+                        )
+                    }
+                }),
+                Box::new(|(a, b_opt): Self| {
+                    if let Some(b) = b_opt {
                         if a != b {
-                            format!("tone_pair((Tone::{:?}, Tone::{:?}))", a, b)
+                            format!("tone((Tone::{:?}, Tone::{:?}))", a, b)
                         } else {
                             format!("tone(Tone::{:?})", a)
                         }
@@ -223,6 +262,10 @@ impl Qualifier for (Tone, Option<Tone>) {
             QualifierSet::new(
                 only_primary,
                 "Tone",
+                Box::new(|(a, b_opt): Self| {
+                    debug_assert!(b_opt.is_none());
+                    format!("tone(Tone::{:?})", a)
+                }),
                 Box::new(|(a, b_opt): Self| {
                     debug_assert!(b_opt.is_none());
                     format!("tone(Tone::{:?})", a)
@@ -267,7 +310,15 @@ impl Qualifier for (OneOrTwo, Option<OneOrTwo>) {
                 "Family",
                 Box::new(|(a, b_opt): Self| {
                     let b = b_opt.unwrap();
-                    format!("family(({}, {}))", a.fancy_source(), b.fancy_source())
+                    format!(
+                        "family(Family{{parents: {}, children: {} }})",
+                        a.fancy_full_source(),
+                        b.fancy_full_source()
+                    )
+                }),
+                Box::new(|(a, b_opt): Self| {
+                    let b = b_opt.unwrap();
+                    format!("gender(({}, {}))", a.fancy_source(), b.fancy_source())
                 }),
             ),
             QualifierSet::new(
@@ -276,7 +327,11 @@ impl Qualifier for (OneOrTwo, Option<OneOrTwo>) {
                 "OneOrTwo",
                 Box::new(|(a, b_opt): Self| {
                     debug_assert!(b_opt.is_none());
-                    format!("one_or_more(OneOrMore::{:?})", a)
+                    format!("one_or_more({:?})", a.fancy_full_source())
+                }),
+                Box::new(|(a, b_opt): Self| {
+                    debug_assert!(b_opt.is_none());
+                    format!("gender({:?})", a.fancy_source())
                 }),
             ),
             QualifierSet::new(
@@ -286,6 +341,14 @@ impl Qualifier for (OneOrTwo, Option<OneOrTwo>) {
                     debug_assert!(b_opt.is_none());
                     if let OneOrTwo::Two(p) = a {
                         format!("pair(Pair::{:?})", p)
+                    } else {
+                        panic!("Found single person emoji in a 'only_two' emoji")
+                    }
+                }),
+                Box::new(|(a, b_opt): Self| {
+                    debug_assert!(b_opt.is_none());
+                    if let OneOrTwo::Two(p) = a {
+                        format!("gender(Pair::{:?})", p)
                     } else {
                         panic!("Found single person emoji in a 'only_two' emoji")
                     }
@@ -302,10 +365,26 @@ impl Qualifier for (OneOrTwo, Option<OneOrTwo>) {
                         panic!("Found multi person emoji in a 'only_one' emoji")
                     }
                 }),
+                Box::new(|(a, b_opt): Self| {
+                    debug_assert!(b_opt.is_none());
+                    if let OneOrTwo::One(g) = a {
+                        format!("gender(Gender::{:?})", g)
+                    } else {
+                        panic!("Found multi person emoji in a 'only_one' emoji")
+                    }
+                }),
             ),
             QualifierSet::new(
                 pseudo_one,
                 "Gender",
+                Box::new(|(a, b_opt): Self| {
+                    debug_assert!(b_opt.is_none());
+                    match a {
+                        OneOrTwo::Two(Pair::Males) => "gender(Gender::Male)".to_string(),
+                        OneOrTwo::Two(Pair::Females) => "gender(Gender::Female)".to_string(),
+                        _ => panic!("Found other person emoji in a 'pseudo_one' emoji"),
+                    }
+                }),
                 Box::new(|(a, b_opt): Self| {
                     debug_assert!(b_opt.is_none());
                     match a {
@@ -328,6 +407,7 @@ impl Qualifier for Hair {
         vec![QualifierSet::new(
             Self::ALL.to_vec(),
             "Hair",
+            Box::new(|h: Self| format!("hair(Hair::{:?})", h)),
             Box::new(|h: Self| format!("hair(Hair::{:?})", h)),
         )]
     }
@@ -358,14 +438,18 @@ impl PersonQualified {
         }
     }
 
-    pub fn to_accessor_n_grapheme<'a>(
+    pub fn to_accessor_n_kind(&self, identifier: &str) -> Vec<(String, String, PersonKind)> {
+        self.to_accessor_n_kind_internal(identifier, identifier)
+    }
+
+    fn to_accessor_n_kind_internal(
         &self,
-        accessor: &str,
-        variants: &'a HashMap<PersonKind, PersonVariant>,
-    ) -> Vec<(String, &'a str)> {
+        const_accessor: &str,
+        pub_accessor: &str,
+    ) -> Vec<(String, String, PersonKind)> {
         match self {
-            Self::Node(n) => n.to_accessor_n_grapheme(accessor, variants),
-            Self::Leaf(l) => l.to_accessor_n_grapheme(accessor, variants),
+            Self::Node(n) => n.to_accessor_n_kind(const_accessor, pub_accessor),
+            Self::Leaf(l) => l.to_accessor_n_kind(const_accessor, pub_accessor),
         }
     }
 }
@@ -383,7 +467,7 @@ impl From<PersonKind> for PersonQualified {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PersonQualifiedNode {
     pub def: Option<Box<PersonQualified>>,
-    pub subs: Vec<(String, PersonQualified)>,
+    pub subs: Vec<(String, String, PersonQualified)>,
     pub type_name: &'static str,
 }
 impl PersonQualifiedNode {
@@ -411,8 +495,8 @@ impl PersonQualifiedNode {
             value.push_str(&format!("{}::new(\n\t&[\n\t\t", ty_name));
         }
 
-        for (acc_val, sub) in &self.subs {
-            let sub_accessor = format!("{}.{}", accessor, acc_val);
+        for (_const_acc, pub_acc, sub) in &self.subs {
+            let sub_accessor = format!("{}.{}", accessor, pub_acc);
             let (inner_ty, inner_value, inner_doc) = sub.to_type_n_value(&sub_accessor, variants);
             docs.push_str(&inner_doc);
             sub_types.push(inner_ty);
@@ -440,22 +524,24 @@ impl PersonQualifiedNode {
         (ty, value, docs)
     }
 
-    fn to_accessor_n_grapheme<'a>(
+    fn to_accessor_n_kind(
         &self,
-        accessor: &str,
-        variants: &'a HashMap<PersonKind, PersonVariant>,
-    ) -> Vec<(String, &'a str)> {
+        const_accessor: &str,
+        pub_accessor: &str,
+    ) -> Vec<(String, String, PersonKind)> {
         // Process some super group
 
         let mut list = Vec::new();
 
         if let Some(def) = &self.def {
-            list.extend(def.to_accessor_n_grapheme(accessor, variants));
+            let sub_const_accessor = format!("{}.default", const_accessor);
+            list.extend(def.to_accessor_n_kind_internal(&sub_const_accessor, pub_accessor));
         }
 
-        for (acc_val, sub) in &self.subs {
-            let sub_accessor = format!("{}.{}", accessor, acc_val);
-            list.extend(sub.to_accessor_n_grapheme(&sub_accessor, variants));
+        for (const_acc, pub_acc, sub) in &self.subs {
+            let sub_const_accessor = format!("{}.{}", const_accessor, const_acc);
+            let sub_pub_accessor = format!("{}.{}", pub_accessor, pub_acc);
+            list.extend(sub.to_accessor_n_kind_internal(&sub_const_accessor, &sub_pub_accessor));
         }
 
         list
@@ -492,22 +578,13 @@ impl PersonQualifiedLeaf {
             emoji_render_single_example(&accessor, &variant.grapheme),
         )
     }
-    fn to_accessor_n_grapheme<'a>(
+    fn to_accessor_n_kind(
         &self,
-        accessor: &str,
-        variants: &'a HashMap<PersonKind, PersonVariant>,
-    ) -> Vec<(String, &'a str)> {
+        const_accessor: &str,
+        pub_accessor: &str,
+    ) -> Vec<(String, String, PersonKind)> {
         // Process the final fully qualified kind
 
-        debug_assert!(
-            variants.contains_key(&self.leaf),
-            "Variant not found: {:?} for {:?}, all: {:?}",
-            self.leaf,
-            accessor,
-            variants
-        );
-        let variant = &variants[&self.leaf];
-
-        vec![(accessor.into(), &variant.grapheme)]
+        vec![(const_accessor.into(), pub_accessor.into(), self.leaf)]
     }
 }

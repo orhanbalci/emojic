@@ -2,7 +2,7 @@
 //! Contains various emoji attributes.
 //!
 
-use std::fmt;
+use core::fmt;
 
 /// Unicode Emoji version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -60,9 +60,9 @@ impl Tone {
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TonePair {
     /// The left hand side person's skin tone
-    left: Tone,
+    pub left: Tone,
     /// The right hand side person's skin tone
-    right: Tone,
+    pub right: Tone,
 }
 impl TonePair {
     /// Returns the entry index for this pair
@@ -92,8 +92,8 @@ impl From<(Tone, Tone)> for TonePair {
 // This is only a reduced pair of tones, always ensure: left <= right
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TonePairReduced {
-    left: Tone,
-    right: Tone,
+    pub left: Tone,
+    pub right: Tone,
 }
 impl TonePairReduced {
     /// Returns the entry index for this pair
@@ -286,8 +286,8 @@ impl From<(Gender, Option<Gender>)> for OneOrTwo {
 /// Represents the genders of an entire family with parents and children.
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Family {
-    parents: OneOrTwo,
-    children: OneOrTwo,
+    pub parents: OneOrTwo,
+    pub children: OneOrTwo,
 }
 impl Family {
     /// Returns the entry index for this constellation
