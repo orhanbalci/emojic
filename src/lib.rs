@@ -175,13 +175,13 @@ pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
 ///
 /// # Examples
 /// ```
-/// use emojic::contry_flag;
+/// use emojic::country_flag;
 ///
-/// assert_eq!(contry_flag("EU"), emojic::flat::FLAG_EUROPEAN_UNION.to_string()); // 🇪🇺
-/// println!("{}", contry_flag("ZZ")); // 🇿🇿 (an invalid flag)
+/// assert_eq!(country_flag("EU"), emojic::flat::FLAG_EUROPEAN_UNION.to_string()); // 🇪🇺
+/// println!("{}", country_flag("ZZ")); // 🇿🇿 (an invalid flag)
 /// ```
 #[cfg(feature = "alloc")]
-pub fn contry_flag(country_code: &str) -> String {
+pub fn country_flag(country_code: &str) -> String {
     assert!(
         country_code.chars().all(|c| c.is_ascii_alphabetic()),
         "Only chars A-Z are allowed as country_code"
@@ -197,6 +197,23 @@ pub fn contry_flag(country_code: &str) -> String {
         .map(|c| core::char::from_u32(c as u32 - 'A' as u32 + '\u{1F1E6}' as u32).unwrap())
         .collect()
 }
+
+
+// TODO: Remove `contry_flag` (without U) before releasing v0.4.0!
+
+// That's embarrassing: Originally `country_flag` had been misspelled as `contry_flag`
+// and with that name it has been released as v0.3.0!
+// Therefore, this misspelled function is kept here to keep it compatible, however it will just
+// redirect to the now correctly named function.
+
+/// Generate an ad-hoc country flag (use [`country_flag`] instead).
+#[cfg(feature = "alloc")]
+#[doc(hidden)] // we don't really need this in the docs.
+#[deprecated = "Just use country_flag instead (with U)"]
+pub fn contry_flag(country_code: &str) -> String {
+	country_flag(country_code)
+}
+
 
 /// Generate an ad-hoc regional flag.
 ///
