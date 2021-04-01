@@ -117,6 +117,22 @@ println!("{} ∩ {} ⊂ {} ⊄ {}",
 For more examples have a look at the
 [examples](https://github.com/orhanbalci/emojic/tree/master/examples) folder.
 
+## 🧩 Crate features
+
+This crate is `no_std` by default, means it should be usable in WASM and other restricted
+platforms. However, some functions such as [`parse_alias`](https://docs.rs/emojic/latest/emojic/fn.parse_alias.html) and the
+ad-hoc flag functions need the `alloc` crate (normally part of `std`),
+thus it is enabled by default.
+
+- `default`: (implies `alloc`) automatically enabled if not opt-out:
+  ```toml
+  [dependencies.emojic]
+  version = "0.3"
+  default-features = false
+  ```
+- `alloc`: requires a global allocator, enables various functions such as `parse_alias` as well
+  as the ad-hoc flag functions (the flag constants are unaffected)
+
 
 
 <!-- cargo-sync-readme end -->

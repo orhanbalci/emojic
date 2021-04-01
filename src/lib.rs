@@ -1,5 +1,12 @@
 #![no_std]
 
+// Enable annotating features requirements in docs
+#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
+
+// Ensures that `pub` means published in the public API.
+// This property is useful for reasoning about breaking API changes.
+#![deny(unreachable_pub)]
+
 //!
 //! Emoji constants for your rusty strings. This crate is inspired by the Go library
 //! [emoji](https://github.com/enescakir/emoji) written by
@@ -93,6 +100,7 @@
 //! [github/gemoji](https://github.com/github/gemoji).
 //!
 //! ```rust
+//! # #[cfg(feature = "alloc")]{ // Only with `alloc`
 //! # use emojic::parse_alias;
 //! # assert_eq!(Some("👍"),
 //! parse_alias(":+1:") // 👍
@@ -103,11 +111,13 @@
 //! # assert_eq!(Some("👩‍🚀"),
 //! parse_alias(":woman_astronaut:") // 👩‍🚀
 //! # .map(|e| e.grapheme));
+//! # } // Only with `alloc`
 //! ```
 //!
 //! Finally, it has functions to generate (arbitrary) country and regional flags.
 //!
 //! ```rust
+//! # #[cfg(feature = "alloc")]{ // Only with `alloc`
 //! # use emojic::regional_flag;
 //! # use emojic::country_flag;
 //! // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 ∩ 🏴󠁧󠁢󠁳󠁣󠁴󠁿 ⊂ 🇬🇧 ⊄ 🇪🇺
@@ -117,12 +127,29 @@
 //!     country_flag("GB"),
 //!     country_flag("EU"),
 //! )
+//! # } // Only with `alloc`
 //! ```
 //!
 //! ## 🔭 Examples
 //!
 //! For more examples have a look at the
 //! [examples](https://github.com/orhanbalci/emojic/tree/master/examples) folder.
+//!
+//! ## 🧩 Crate features
+//!
+//! This crate is `no_std` by default, means it should be usable in WASM and other restricted
+//! platforms. However, some functions such as [`parse_alias`](crate::parse_alias) and the
+//! ad-hoc flag functions need the `alloc` crate (normally part of `std`),
+//! thus it is enabled by default.
+//!
+//! - `default`: (implies `alloc`) automatically enabled if not opt-out:
+//!   ```toml
+//!   [dependencies.emojic]
+//!   version = "0.3"
+//!   default-features = false
+//!   ```
+//! - `alloc`: requires a global allocator, enables various functions such as `parse_alias` as well
+//!   as the ad-hoc flag functions (the flag constants are unaffected)
 //!
 //!
 
@@ -176,6 +203,7 @@ use emojis::Emoji;
 /// ```
 ///
 #[cfg(feature = "alloc")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
 pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
     alias::GEMOJI_MAP.get(inp).cloned()
 }
@@ -205,6 +233,7 @@ pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
 /// );
 /// ```
 #[cfg(feature = "alloc")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
 pub fn country_flag(country_code: &str) -> String {
     assert!(
         country_code.chars().all(|c| c.is_ascii_alphabetic()),
@@ -263,6 +292,7 @@ pub fn contry_flag(country_code: &str) -> String {
 /// );
 /// ```
 #[cfg(feature = "alloc")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
 pub fn regional_flag(regional_code: &str) -> String {
     assert!(
         regional_code
