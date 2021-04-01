@@ -19,11 +19,24 @@ required-features = ["alloc"]
 
 [features]
 default = ["alloc"]   # default features are automatically enables (if not opt-out)
-alloc = ["hashbrown"] # requires global allocator, enables various functions such as parse_alias
+alloc = [             # requires global allocator, enables various functions such as parse_alias
+    "hashbrown",
+    "lazy_static"
+]
 doc_cfg = []          # requires nightly compiler, only intended for docs.rs builds (enables usage of doc_cfg)
 
 [dependencies]
-lazy_static = "1.4.0"
+
+[dependencies.lazy_static]
+version = "1.4.0"
+optional = true
+# The following feature on `lazy_static` would remove the transitive dependency of lazy_static on
+# std, which is necessary if targetting a platform without it. However, since the current version
+# of Cargo (1.51.0) unifies features acros crates, requiring that feature here, would make
+# lazy_static globally use spinloks instead of mutices. So, it seems more reasonable that a final
+# user (binary crate) adds this feature if they want `alloc` but not `std`.
+# Also see: https://github.com/rust-lang-nursery/lazy-static.rs/issues/150
+#features = ["spin_no_std"] # Would remove std from lazy_static, but it has side-effects
 
 [dependencies.hashbrown]
 version = "0.11"

@@ -142,14 +142,32 @@
 //! ad-hoc flag functions need the `alloc` crate (normally part of `std`),
 //! thus it is enabled by default.
 //!
-//! - `default`: (implies `alloc`) automatically enabled if not opt-out:
+//! - `default`: (implies `alloc`) \
+//!   Automatically enabled if not opt-out:
 //!   ```toml
 //!   [dependencies.emojic]
 //!   version = "0.3"
 //!   default-features = false
 //!   ```
-//! - `alloc`: requires a global allocator, enables various functions such as `parse_alias` as well
-//!   as the ad-hoc flag functions (the flag constants are unaffected)
+//! - `alloc`: (implies `hashbrown` and `lazy_static`) \
+//!   Requires a global allocator,
+//!   enables various functions such as `parse_alias` as well
+//!   as the ad-hoc flag functions (the flag constants are unaffected).
+//!
+//!   Notice, that `lazy_static`, by default, pulls-in `std` to use mutices for waiting.
+//!   This is good if you do have `std` available, and bad if not. However, the alternative is
+//!   to instruct `lazy_static` to use spinlocks instead. Yet, since crate-features are unified by
+//!   Cargo, it would be bad for all user that have `std`, to requiring it by default.
+//!   Instead, if you want to use this `alloc` feature, but you don't have `std`
+//!   (e.g. in your binary crate), you can simply add `lazy_static` yourself, and make it to use
+//!   spinlocks, which will apply globally. E.g. add to your `Cargo.toml`:
+//!   ```toml
+//!   [dependencies.lazy_static]
+//!   version = "1.4"
+//!   features = ["spin_no_std"]
+//!   ```
+//!   Also see: <https://github.com/rust-lang-nursery/lazy-static.rs/issues/150>
+//!
 //!
 //!
 
