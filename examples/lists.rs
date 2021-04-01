@@ -50,9 +50,12 @@ fn main() {
             .collect::<String>()
     );
 
-    // Outputs the each emoji with its full name
-    println!("Geographic places with names:");
+    // Outputs the each emoji with its full name and version of introduction
+    println!("Geographic places with names and version:");
     for emoji in place_geographic::base_emojis() {
-        println!(" - {}: {}", emoji.name, emoji.grapheme);
+        println!(
+            " - {}: {} (since E{})",
+            emoji.name, emoji.grapheme, emoji.since
+        );
     }
 }

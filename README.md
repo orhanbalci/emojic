@@ -11,6 +11,10 @@ Emoji constants for your rusty strings. This crate is inspired by the Go library
 [emoji](https://github.com/enescakir/emoji) written by
 [@enescakir](https://github.com/enescakir).
 
+_Notice that this file uses the actual Unicode emojis to given visual example of the result.
+However, depending on the font and support on your device, not all emojis might be represented
+correctly, especially the newer ones._
+
 
 ## 📦 Cargo.toml
 
@@ -87,7 +91,8 @@ As well as iterators to list all the emojis in each group and subgroup:
 emojic::grouped::people_and_body::hands::base_emojis()
 ```
 
-Finally, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
+Additionally, it has additional emoji aliases from
+[github/gemoji](https://github.com/github/gemoji).
 
 ```rust
 parse_alias(":+1:") // 👍
@@ -95,10 +100,38 @@ parse_alias(":100:") // 💯
 parse_alias(":woman_astronaut:") // 👩‍🚀
 ```
 
+Finally, it has functions to generate (arbitrary) country and regional flags.
+
+```rust
+// 🏴󠁧󠁢󠁥󠁮󠁧󠁿 ∩ 🏴󠁧󠁢󠁳󠁣󠁴󠁿 ⊂ 🇬🇧 ⊄ 🇪🇺
+println!("{} ∩ {} ⊂ {} ⊄ {}",
+    regional_flag("GB-ENG"),
+    regional_flag("GB-SCT"),
+    country_flag("GB"),
+    country_flag("EU"),
+)
+```
+
 ## 🔭 Examples
 
 For more examples have a look at the
 [examples](https://github.com/orhanbalci/emojic/tree/master/examples) folder.
+
+## 🧩 Crate features
+
+This crate is `no_std` by default, means it should be usable in WASM and other restricted
+platforms. However, some functions such as [`parse_alias`](https://docs.rs/emojic/latest/emojic/fn.parse_alias.html) and the
+ad-hoc flag functions need the `alloc` crate (normally part of `std`),
+thus it is enabled by default.
+
+- `default`: (implies `alloc`) automatically enabled if not opt-out:
+  ```toml
+  [dependencies.emojic]
+  version = "0.3"
+  default-features = false
+  ```
+- `alloc`: requires a global allocator, enables various functions such as `parse_alias` as well
+  as the ad-hoc flag functions (the flag constants are unaffected)
 
 
 

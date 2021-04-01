@@ -18,11 +18,18 @@ required-features = ["alloc"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["alloc"]
-alloc = ["hashbrown"]
+default = ["alloc"]   # default features are automatically enables (if not opt-out)
+alloc = ["hashbrown"] # requires global allocator, enables various functions such as parse_alias
+doc_cfg = []          # requires nightly compiler, only intended for docs.rs builds (enables usage of doc_cfg)
 
 [dependencies]
 lazy_static = "1.4.0"
-hashbrown = { version = "0.11", optional = true }
 
+[dependencies.hashbrown]
+version = "0.11"
+optional = true
+
+
+[package.metadata.docs.rs]
+all-features = true # enable all features when building dos on docs.rs
 

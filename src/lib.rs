@@ -1,9 +1,20 @@
 #![no_std]
 
+// Enable annotating features requirements in docs
+#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
+
+// Ensures that `pub` means published in the public API.
+// This property is useful for reasoning about breaking API changes.
+#![deny(unreachable_pub)]
+
 //!
 //! Emoji constants for your rusty strings. This crate is inspired by the Go library
 //! [emoji](https://github.com/enescakir/emoji) written by
 //! [@enescakir](https://github.com/enescakir).
+//!
+//! _Notice that this file uses the actual Unicode emojis to given visual example of the result.
+//! However, depending on the font and support on your device, not all emojis might be represented
+//! correctly, especially the newer ones._
 //!
 //!
 //! ## 📦 Cargo.toml
@@ -85,9 +96,11 @@
 //! # assert_eq!("👏🙏🤝👐🤲🙌", text);
 //! ```
 //!
-//! Finally, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
+//! Additionally, it has additional emoji aliases from
+//! [github/gemoji](https://github.com/github/gemoji).
 //!
 //! ```rust
+//! # #[cfg(feature = "alloc")]{ // Only with `alloc`
 //! # use emojic::parse_alias;
 //! # assert_eq!(Some("👍"),
 //! parse_alias(":+1:") // 👍
@@ -98,12 +111,45 @@
 //! # assert_eq!(Some("👩‍🚀"),
 //! parse_alias(":woman_astronaut:") // 👩‍🚀
 //! # .map(|e| e.grapheme));
+//! # } // Only with `alloc`
+//! ```
+//!
+//! Finally, it has functions to generate (arbitrary) country and regional flags.
+//!
+//! ```rust
+//! # #[cfg(feature = "alloc")]{ // Only with `alloc`
+//! # use emojic::regional_flag;
+//! # use emojic::country_flag;
+//! // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 ∩ 🏴󠁧󠁢󠁳󠁣󠁴󠁿 ⊂ 🇬🇧 ⊄ 🇪🇺
+//! println!("{} ∩ {} ⊂ {} ⊄ {}",
+//!     regional_flag("GB-ENG"),
+//!     regional_flag("GB-SCT"),
+//!     country_flag("GB"),
+//!     country_flag("EU"),
+//! )
+//! # } // Only with `alloc`
 //! ```
 //!
 //! ## 🔭 Examples
 //!
 //! For more examples have a look at the
 //! [examples](https://github.com/orhanbalci/emojic/tree/master/examples) folder.
+//!
+//! ## 🧩 Crate features
+//!
+//! This crate is `no_std` by default, means it should be usable in WASM and other restricted
+//! platforms. However, some functions such as [`parse_alias`](crate::parse_alias) and the
+//! ad-hoc flag functions need the `alloc` crate (normally part of `std`),
+//! thus it is enabled by default.
+//!
+//! - `default`: (implies `alloc`) automatically enabled if not opt-out:
+//!   ```toml
+//!   [dependencies.emojic]
+//!   version = "0.3"
+//!   default-features = false
+//!   ```
+//! - `alloc`: requires a global allocator, enables various functions such as `parse_alias` as well
+//!   as the ad-hoc flag functions (the flag constants are unaffected)
 //!
 //!
 
@@ -157,6 +203,7 @@ use emojis::Emoji;
 /// ```
 ///
 #[cfg(feature = "alloc")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
 pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
     alias::GEMOJI_MAP.get(inp).cloned()
 }
@@ -175,13 +222,19 @@ pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
 ///
 /// # Examples
 /// ```
-/// use emojic::contry_flag;
+/// use emojic::country_flag;
 ///
-/// assert_eq!(contry_flag("EU"), emojic::flat::FLAG_EUROPEAN_UNION.to_string()); // 🇪🇺
-/// println!("{}", contry_flag("ZZ")); // 🇿🇿 (an invalid flag)
+/// assert_eq!(
+///     country_flag("EU"), // 🇪🇺
+///     emojic::flat::FLAG_EUROPEAN_UNION.to_string()
+/// );
+/// println!("{}",
+///     country_flag("ZZ"), // 🇿🇿 (an invalid flag)
+/// );
 /// ```
 #[cfg(feature = "alloc")]
-pub fn contry_flag(country_code: &str) -> String {
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
+pub fn country_flag(country_code: &str) -> String {
     assert!(
         country_code.chars().all(|c| c.is_ascii_alphabetic()),
         "Only chars A-Z are allowed as country_code"
@@ -198,6 +251,23 @@ pub fn contry_flag(country_code: &str) -> String {
         .collect()
 }
 
+
+// TODO: Remove `contry_flag` (without U) before releasing v0.4.0!
+
+// That's embarrassing: Originally `country_flag` had been misspelled as `contry_flag`
+// and with that name it has been released as v0.3.0!
+// Therefore, this misspelled function is kept here to keep it compatible, however it will just
+// redirect to the now correctly named function.
+
+/// Generate an ad-hoc country flag (use [`country_flag`] instead).
+#[cfg(feature = "alloc")]
+#[doc(hidden)] // we don't really need this in the docs.
+#[deprecated = "Just use country_flag instead (with U)"]
+pub fn contry_flag(country_code: &str) -> String {
+    country_flag(country_code)
+}
+
+
 /// Generate an ad-hoc regional flag.
 ///
 /// This function allows to create arbitrary regional flags.
@@ -213,10 +283,16 @@ pub fn contry_flag(country_code: &str) -> String {
 /// ```
 /// use emojic::regional_flag;
 ///
-/// assert_eq!(regional_flag("GB-ENG"), emojic::flat::FLAG_ENGLAND.to_string()); // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 (England region of United Kingdom (GB))
-/// println!("{}", regional_flag("ZZ-ABC")); // 🏴󠁺󠁺󠁡󠁢󠁣󠁿 (an invalid flag)
+/// assert_eq!(
+///     regional_flag("GB-ENG"), // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 (England region of United Kingdom (GB))
+///     emojic::flat::FLAG_ENGLAND.to_string()
+/// );
+/// println!("{}",
+///     regional_flag("ZZ-ABC") // 🏴󠁺󠁺󠁡󠁢󠁣󠁿 (an invalid flag)
+/// );
 /// ```
 #[cfg(feature = "alloc")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
 pub fn regional_flag(regional_code: &str) -> String {
     assert!(
         regional_code
