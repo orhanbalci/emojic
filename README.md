@@ -11,6 +11,10 @@ Emoji constants for your rusty strings. This crate is inspired by the Go library
 [emoji](https://github.com/enescakir/emoji) written by
 [@enescakir](https://github.com/enescakir).
 
+_Notice that this file uses the actual Unicode emojis to given visual example of the result.
+However, depending on the font and support on your device, not all emojis might be represented
+correctly, especially the newer ones._
+
 
 ## 📦 Cargo.toml
 
@@ -87,12 +91,25 @@ As well as iterators to list all the emojis in each group and subgroup:
 emojic::grouped::people_and_body::hands::base_emojis()
 ```
 
-Finally, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
+Additionally, it has additional emoji aliases from
+[github/gemoji](https://github.com/github/gemoji).
 
 ```rust
 parse_alias(":+1:") // 👍
 parse_alias(":100:") // 💯
 parse_alias(":woman_astronaut:") // 👩‍🚀
+```
+
+Finally, it has functions to generate (arbitrary) country and regional flags.
+
+```rust
+// 🏴󠁧󠁢󠁥󠁮󠁧󠁿 ∩ 🏴󠁧󠁢󠁳󠁣󠁴󠁿 ⊂ 🇬🇧 ⊄ 🇪🇺
+println!("{} ∩ {} ⊂ {} ⊄ {}",
+    regional_flag("GB-ENG"),
+    regional_flag("GB-SCT"),
+    country_flag("GB"),
+    country_flag("EU"),
+)
 ```
 
 ## 🔭 Examples

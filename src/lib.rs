@@ -5,6 +5,10 @@
 //! [emoji](https://github.com/enescakir/emoji) written by
 //! [@enescakir](https://github.com/enescakir).
 //!
+//! _Notice that this file uses the actual Unicode emojis to given visual example of the result.
+//! However, depending on the font and support on your device, not all emojis might be represented
+//! correctly, especially the newer ones._
+//!
 //!
 //! ## 📦 Cargo.toml
 //!
@@ -85,7 +89,8 @@
 //! # assert_eq!("👏🙏🤝👐🤲🙌", text);
 //! ```
 //!
-//! Finally, it has additional emoji aliases from [github/gemoji](https://github.com/github/gemoji).
+//! Additionally, it has additional emoji aliases from
+//! [github/gemoji](https://github.com/github/gemoji).
 //!
 //! ```rust
 //! # use emojic::parse_alias;
@@ -98,6 +103,20 @@
 //! # assert_eq!(Some("👩‍🚀"),
 //! parse_alias(":woman_astronaut:") // 👩‍🚀
 //! # .map(|e| e.grapheme));
+//! ```
+//!
+//! Finally, it has functions to generate (arbitrary) country and regional flags.
+//!
+//! ```rust
+//! # use emojic::regional_flag;
+//! # use emojic::country_flag;
+//! // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 ∩ 🏴󠁧󠁢󠁳󠁣󠁴󠁿 ⊂ 🇬🇧 ⊄ 🇪🇺
+//! println!("{} ∩ {} ⊂ {} ⊄ {}",
+//!     regional_flag("GB-ENG"),
+//!     regional_flag("GB-SCT"),
+//!     country_flag("GB"),
+//!     country_flag("EU"),
+//! )
 //! ```
 //!
 //! ## 🔭 Examples
@@ -177,8 +196,13 @@ pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
 /// ```
 /// use emojic::country_flag;
 ///
-/// assert_eq!(country_flag("EU"), emojic::flat::FLAG_EUROPEAN_UNION.to_string()); // 🇪🇺
-/// println!("{}", country_flag("ZZ")); // 🇿🇿 (an invalid flag)
+/// assert_eq!(
+///     country_flag("EU"), // 🇪🇺
+///     emojic::flat::FLAG_EUROPEAN_UNION.to_string()
+/// );
+/// println!("{}",
+///     country_flag("ZZ"), // 🇿🇿 (an invalid flag)
+/// );
 /// ```
 #[cfg(feature = "alloc")]
 pub fn country_flag(country_code: &str) -> String {
@@ -211,7 +235,7 @@ pub fn country_flag(country_code: &str) -> String {
 #[doc(hidden)] // we don't really need this in the docs.
 #[deprecated = "Just use country_flag instead (with U)"]
 pub fn contry_flag(country_code: &str) -> String {
-	country_flag(country_code)
+    country_flag(country_code)
 }
 
 
@@ -230,8 +254,13 @@ pub fn contry_flag(country_code: &str) -> String {
 /// ```
 /// use emojic::regional_flag;
 ///
-/// assert_eq!(regional_flag("GB-ENG"), emojic::flat::FLAG_ENGLAND.to_string()); // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 (England region of United Kingdom (GB))
-/// println!("{}", regional_flag("ZZ-ABC")); // 🏴󠁺󠁺󠁡󠁢󠁣󠁿 (an invalid flag)
+/// assert_eq!(
+///     regional_flag("GB-ENG"), // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 (England region of United Kingdom (GB))
+///     emojic::flat::FLAG_ENGLAND.to_string()
+/// );
+/// println!("{}",
+///     regional_flag("ZZ-ABC") // 🏴󠁺󠁺󠁡󠁢󠁣󠁿 (an invalid flag)
+/// );
 /// ```
 #[cfg(feature = "alloc")]
 pub fn regional_flag(regional_code: &str) -> String {
