@@ -5,6 +5,8 @@
 use core::fmt;
 
 /// Unicode Emoji version.
+///
+/// This struct is used by [`Emoji`](super::Emoji) to denote when an emoji was introduced.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Version(pub u64, pub u64);
 impl fmt::Display for Version {
@@ -34,6 +36,7 @@ pub enum Tone {
     Dark,
 }
 impl Tone {
+    /// Exhaustive list of all variants
     pub const ALL: [Tone; 5] = [
         Self::Light,
         Self::MediumLight,
@@ -42,6 +45,7 @@ impl Tone {
         Self::Dark,
     ];
 
+    /// Descriptive name of this attribute variant
     pub const fn name(self) -> &'static str {
         match self {
             Self::Light => "light skin tone",
@@ -143,18 +147,23 @@ pub enum Gender {
     Female,
 }
 impl Gender {
+    /// Exhaustive list of all variants
     pub const ALL: [Gender; 2] = [Self::Male, Self::Female];
 
+    /// [`Family`] composer using `self` as parent
     pub fn with_children(self, children: impl Into<OneOrTwo>) -> Family {
         (self, children).into()
     }
 
+    /// Descriptive name of this attribute variant as adults
     pub const fn name_adults(self) -> &'static str {
         match self {
             Self::Male => "man",
             Self::Female => "woman",
         }
     }
+
+    /// Descriptive name of this attribute variant as children
     pub const fn name_children(self) -> &'static str {
         match self {
             Self::Male => "boy",
@@ -179,12 +188,15 @@ pub enum Pair {
     Females,
 }
 impl Pair {
+    /// Exhaustive list of all variants
     pub const ALL: [Pair; 3] = [Self::Males, Self::Mixed, Self::Females];
 
+    /// [`Family`] composer using `self` as parents
     pub fn with_children(self, children: impl Into<OneOrTwo>) -> Family {
         (self, children).into()
     }
 
+    /// Descriptive name of this attribute variant as adults
     pub const fn name_adults(self) -> &'static str {
         match self {
             Self::Males => "men",
@@ -192,6 +204,7 @@ impl Pair {
             Self::Females => "women",
         }
     }
+    /// Descriptive name of this attribute variant as children
     pub const fn name_children(self) -> &'static str {
         match self {
             Self::Males => "boys",
@@ -213,7 +226,21 @@ impl From<(Gender, Gender)> for Pair {
 
 /// Represents one's or two person's gender while defining whether it's one or two.
 ///
-/// E.g. one: 👩‍👦👨‍👦, two: 👨‍👨‍👦👨‍👩‍👦👩‍👩‍👦
+/// Actually, this attribute is not used as such by any emoji, instead, it is used to compose
+/// a [`Family`], which consists of two `OneOrTwo` structs.
+///
+/// E.g. one: 👨‍👦 (parent), two: 👨‍👨‍👦 (parents)
+///
+/// To get a `OneOrTwo` value, it is recommended to use any of the `From` impls e.g.:
+///
+/// ```rust
+/// # use emojic::emojis::{OneOrTwo,Pair,Gender};
+/// // From<Gender>
+/// assert_eq!(OneOrTwo::One(Gender::Male), Gender::Male.into());
+/// // From<Pair>
+/// assert_eq!(OneOrTwo::Two(Pair::Males), Pair::Males.into());
+/// ```
+///
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum OneOrTwo {
     /// Only one person
@@ -222,6 +249,7 @@ pub enum OneOrTwo {
     Two(Pair),
 }
 impl OneOrTwo {
+    /// Exhaustive list of all variants
     pub const ALL: [OneOrTwo; 5] = [
         Self::One(Gender::Male),
         Self::One(Gender::Female),
@@ -241,16 +269,19 @@ impl OneOrTwo {
         }
     }
 
+    /// [`Family`] composer using `self` as parents
     pub fn with_children(self, children: impl Into<OneOrTwo>) -> Family {
         (self, children).into()
     }
 
+    /// Descriptive name of this attribute variant
     pub const fn name_adults(self) -> &'static str {
         match self {
             Self::One(one) => one.name_adults(),
             Self::Two(two) => two.name_adults(),
         }
     }
+    /// Descriptive name of this attribute variant
     pub const fn name_children(self) -> &'static str {
         match self {
             Self::One(one) => one.name_children(),
@@ -284,6 +315,59 @@ impl From<(Gender, Option<Gender>)> for OneOrTwo {
 }
 
 /// Represents the genders of an entire family with parents and children.
+///
+/// A Family consists of parents and children, each either a single or two persons as
+/// expressed by the [`OneOrTwo`] struct.
+///
+/// E.g.:
+///  - one parent & one child: 👨‍👦
+///  - two parents & one child: 👨‍👨‍👦
+///  - one parent & two children: 👩‍👧‍👦
+///  - and so on...
+///
+/// To get a `Family` value, it is recommended to use any of the `From` impls e.g.:
+///
+/// ```rust
+/// # use emojic::emojis::{Family,OneOrTwo,Pair,Gender};
+/// // From<(Gender,Gender)>
+/// assert_eq!(
+///     Family {
+///         parents: OneOrTwo::One(Gender::Male),
+///         children: OneOrTwo::One(Gender::Male),
+///     },
+///     (Gender::Male,Gender::Male).into()
+/// );
+/// // From<(Pair,Pair)>
+/// assert_eq!(
+///     Family {
+///         parents: OneOrTwo::Two(Pair::Males),
+///         children: OneOrTwo::Two(Pair::Males),
+///     },
+///     (Pair::Males,Pair::Males).into()
+/// );
+/// ```
+///
+/// Or use the `with_children` composer of [`Gender`] and [`Pair`]:
+///
+/// ```rust
+/// # use emojic::emojis::{Family,OneOrTwo,Pair,Gender};
+/// // Gender::with_children
+/// assert_eq!(
+///     Family {
+///         parents: OneOrTwo::One(Gender::Male),
+///         children: OneOrTwo::One(Gender::Male),
+///     },
+///     Gender::Male.with_children(Gender::Male)
+/// );
+/// // Pair::with_children
+/// assert_eq!(
+///     Family {
+///         parents: OneOrTwo::Two(Pair::Males),
+///         children: OneOrTwo::Two(Pair::Males),
+///     },
+///     Pair::Males.with_children(Pair::Males)
+/// );
+/// ```
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Family {
     pub parents: OneOrTwo,
@@ -327,6 +411,7 @@ pub enum Hair {
     Bald,
 }
 impl Hair {
+    /// Exhaustive list of all variants
     pub const ALL: [Hair; 6] = [
         Self::Beard,
         Self::Blond,
@@ -336,6 +421,7 @@ impl Hair {
         Self::Bald,
     ];
 
+    /// Descriptive name of this attribute variant
     pub const fn name(self) -> &'static str {
         match self {
             Self::Beard => "beard",
