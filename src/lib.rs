@@ -187,6 +187,9 @@ pub mod flat; // Generated module
 #[rustfmt::skip]
 pub mod grouped; // Generated module
 
+mod parser;
+pub use parser::EmojiTextParser;
+
 pub mod emojis;
 pub use emojis::Gender;
 pub use emojis::Hair;
@@ -330,6 +333,21 @@ pub fn regional_flag(regional_code: &str) -> String {
         .chain(code) // code as tag sequence
         .chain(core::iter::once('\u{E007F}')) // end sequence tag
         .collect()
+}
+
+/// Replaces textual gemojis (`:[a-z]+:`) with their unicode equivilent.
+///
+/// ```rust
+/// use emojic::parse;
+/// assert_eq!(
+///     "Hello 👋, I am a 🧑‍💻.",
+///     &parse("Hello :waving_hand:, I am a :technologist:."),
+/// );
+/// ```
+#[cfg(feature = "alloc")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
+pub fn parse(text: &str) -> String {
+    EmojiTextParser::new(text).collect()
 }
 
 #[cfg(test)]
