@@ -26,6 +26,7 @@ alloc = [             # requires global allocator, enables various functions suc
 doc_cfg = []          # requires nightly compiler, only intended for docs.rs builds (enables usage of doc_cfg)
 
 [dependencies]
+cfg-if = "1.0"
 
 [dependencies.lazy_static]
 version = "1.4.0"

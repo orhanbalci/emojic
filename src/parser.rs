@@ -1,5 +1,7 @@
 use core::str::CharIndices;
+use core::fmt;
 
+#[derive(Debug, Clone)]
 pub struct EmojiTextParser<'a> {
     original: &'a str,
     progress: CharIndices<'a>,
@@ -89,13 +91,21 @@ impl<'a> Iterator for EmojiTextParser<'a> {
         }
     }
 }
+impl<'a> fmt::Display for EmojiTextParser<'a> {
+	fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+		let mut copy = self.clone();
+		for frag in copy {
+			write!(fmt, "{}", frag)?
+		}
+		Ok(())
+	}
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    #[cfg(feature = "alloc")]
     fn parser_test() {
         let input = "Hello :waving_hand:, I am a :technologist:.";
         let mut parser = EmojiTextParser::new(input);
@@ -109,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "alloc")]
+	#[cfg(feature = "alloc")]
     fn parser_nothing() {
         use alloc::string::String;
 

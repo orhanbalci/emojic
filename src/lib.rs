@@ -100,7 +100,6 @@
 //! [github/gemoji](https://github.com/github/gemoji).
 //!
 //! ```rust
-//! # #[cfg(feature = "alloc")]{ // Only with `alloc`
 //! # use emojic::parse_alias;
 //! # assert_eq!(Some("👍"),
 //! parse_alias(":+1:") // 👍
@@ -111,7 +110,6 @@
 //! # assert_eq!(Some("👩‍🚀"),
 //! parse_alias(":woman_astronaut:") // 👩‍🚀
 //! # .map(|e| e.grapheme));
-//! # } // Only with `alloc`
 //! ```
 //!
 //! Finally, it has functions to generate (arbitrary) country and regional flags.
@@ -171,15 +169,19 @@
 //!
 //!
 
-#[cfg(feature = "alloc")]
-extern crate alloc;
+use cfg_if;
 
-#[cfg(feature = "alloc")]
-use alloc::string::String;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "alloc")] {
+        extern crate alloc;
+        use alloc::string::String;
 
-#[rustfmt::skip]
-#[cfg(feature = "alloc")]
-mod alias; // Generated module
+        #[rustfmt::skip]
+        mod alias; // Generated module
+    } else {
+        mod matching; // Generated module
+    }
+}
 
 #[rustfmt::skip]
 pub mod flat; // Generated module
@@ -223,10 +225,16 @@ use emojis::Emoji;
 /// );
 /// ```
 ///
-#[cfg(feature = "alloc")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
 pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
-    alias::GEMOJI_MAP.get(inp).cloned()
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "alloc")] {
+            // If we have alloc, we use the faster hash map
+            alias::GEMOJI_MAP.get(inp).cloned()
+        } else {
+            // As a fallback, we can also use a huge match statement
+            matching::matching(inp)
+        }
+    }
 }
 
 /// Generate an ad-hoc country flag.
@@ -355,7 +363,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(feature = "alloc")]
     fn parse_test() {
         assert_eq!(
             Some(&crate::flat::FLAG_ECUADOR),
@@ -364,7 +371,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "alloc")]
     fn parse_fail() {
         assert_eq!(None, parse_alias(":hebele:"));
     }

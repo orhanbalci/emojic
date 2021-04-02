@@ -60,7 +60,9 @@ fn main() {
     save_flat_constants(&constants);
     save_grouped_constants(&constants);
 
-    save_aliasses(generate_aliases(&mut e, &a));
+    let (map_alias, match_aliases) = generate_aliases(&mut e, &a);
+    save_aliasses(map_alias);
+    save_big_matcher(match_aliases);
 }
 
 fn read_lines<'a>(content: &Vec<u8>, mut f: impl FnMut(&mut str) -> ()) {
@@ -209,7 +211,7 @@ fn generate_constants(e: &Emojis) -> Vec<GroupedConstant> {
         .collect()
 }
 
-fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> String {
+fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> (String, String) {
     let mut aliasses: Vec<String> = Vec::new();
     let mut emoji_map: HashMap<String, String> = HashMap::new();
     let mut emoji_map_by_grapheme: HashMap<String, String> = HashMap::new();
@@ -246,7 +248,8 @@ fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> St
     });
 
     aliasses[..].sort();
-    aliasses = aliasses
+
+    let map_aliasses = aliasses
         .iter_mut()
         .map(|al| {
             format!(
@@ -257,7 +260,18 @@ fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> St
         })
         .collect::<Vec<String>>();
 
-    aliasses[..].join("")
+    let match_aliasses = aliasses
+        .iter_mut()
+        .map(|al| {
+            format!(
+                "\"{}\" => Some(&crate::flat::{} as &crate::Emoji),\n",
+                al,
+                emoji_map.get(al).unwrap()
+            )
+        })
+        .collect::<Vec<String>>();
+
+    (map_aliasses[..].join(""), match_aliasses[..].join(""))
 }
 
 fn save_flat_constants(constants: &[GroupedConstant]) {
@@ -294,6 +308,25 @@ fn save_grouped_constants(constants: &[GroupedConstant]) {
         .render("grouped.tpl", &context)
         .expect("Failed to render grouped");
     File::create("./grouped.rs")
+        .unwrap()
+        .write_all(bytes.as_bytes());
+}
+
+fn save_big_matcher(aliasses: String) {
+    let mut context = Context::new();
+
+    use chrono::{DateTime, Utc};
+    let now: DateTime<Utc> = Utc::now();
+
+    let today = format!("{}", now);
+    context.insert("Link", EMOJI_URL);
+    context.insert("Date", &today);
+    context.insert("Data", &aliasses);
+
+    let bytes = TEMPLATES
+        .render("matching.tpl", &context)
+        .expect("Failed to render matching");
+    File::create("./matching.rs")
         .unwrap()
         .write_all(bytes.as_bytes());
 }

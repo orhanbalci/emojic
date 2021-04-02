@@ -5,9 +5,6 @@
 
 #![allow(unused_imports)]
 
-use lazy_static::lazy_static;
-use hashbrown::HashMap;
-
 use crate::Tone;
 use crate::Gender;
 use crate::Hair;
@@ -16,10 +13,13 @@ use crate::emojis::OneOrTwo;
 use crate::emojis::TonePair;
 use crate::emojis::Family;
 
-lazy_static!{
-    pub(crate) static ref GEMOJI_MAP: HashMap<&'static str, &'static crate::Emoji> = [
-        {{ Data }}
-    ].iter().copied().collect();
+pub(crate) fn matching(s: &str) -> Option<&'static crate::Emoji> {
+	match s {
+
+		{{ Data }}
+
+		_ => None
+	}
 }
 
 // EOF

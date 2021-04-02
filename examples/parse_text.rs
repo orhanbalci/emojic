@@ -8,5 +8,9 @@ We don't use :file_cabinet: but :file_folder: which can be :open_file_folder:
 ";
 
 fn main() {
+	#[cfg(feature = "alloc")]
     println!("{}", emojic::parse(TEXT));
+
+	#[cfg(not(feature = "alloc"))]
+    println!("{}", emojic::EmojiTextParser::new(TEXT));
 }
