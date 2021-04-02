@@ -14,6 +14,7 @@ use serde::Serialize;
 use std::fmt;
 use std::fs::File;
 use std::{
+    collections::BTreeMap,
     collections::HashMap,
     io::{BufRead, BufReader, Write},
 };
@@ -211,7 +212,10 @@ fn generate_constants(e: &Emojis) -> Vec<GroupedConstant> {
         .collect()
 }
 
-fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> (String, String) {
+fn generate_aliases(
+    emoji: &mut Emojis,
+    gemojis: &HashMap<String, String>,
+) -> (String, (String, String)) {
     let mut aliasses: Vec<String> = Vec::new();
     let mut emoji_map: HashMap<String, String> = HashMap::new();
     let mut emoji_map_by_grapheme: HashMap<String, String> = HashMap::new();
@@ -250,7 +254,7 @@ fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> (S
     aliasses[..].sort();
 
     let map_aliasses = aliasses
-        .iter_mut()
+        .iter()
         .map(|al| {
             format!(
                 "(\"{}\" , &crate::flat::{} as &crate::Emoji),\n",
@@ -258,20 +262,65 @@ fn generate_aliases(emoji: &mut Emojis, gemojis: &HashMap<String, String>) -> (S
                 emoji_map.get(al).unwrap()
             )
         })
-        .collect::<Vec<String>>();
+        .collect::<String>();
 
-    let match_aliasses = aliasses
-        .iter_mut()
-        .map(|al| {
-            format!(
-                "\"{}\" => Some(&crate::flat::{} as &crate::Emoji),\n",
-                al,
+    let match_aliasses = {
+        let mut single_bytes: BTreeMap<char, &str> = BTreeMap::new();
+        let mut two_byte_groups: BTreeMap<char, BTreeMap<char, Vec<&str>>> = BTreeMap::new();
+
+        for al in &aliasses {
+            let len = al.len();
+            if len == 0 {
+                panic!("Found an empty alias");
+            } else if len == 1 {
+                let first = al.chars().next().unwrap();
+                single_bytes.insert(first, &al);
+            } else {
+                let mut chars = al.chars();
+                let first = chars.next().unwrap();
+                let sec = chars.next().unwrap();
+
+                two_byte_groups
+                    .entry(first)
+                    .or_default()
+                    .entry(sec)
+                    .or_default()
+                    .push(&al);
+            }
+        }
+
+        let mut out_single = String::new();
+        for (first, al) in single_bytes {
+            out_single.push_str(&format!(
+                "\t\t\tb'{}' => Some(&crate::flat::{} as &crate::Emoji),\n",
+                first,
                 emoji_map.get(al).unwrap()
-            )
-        })
-        .collect::<Vec<String>>();
+            ));
+        }
 
-    (map_aliasses[..].join(""), match_aliasses[..].join(""))
+        let mut out_two = String::new();
+        for (first, grp) in two_byte_groups {
+            out_two.push_str(&format!("\t\t\tb'{}' => match sec {{\n", first));
+            for (sec, sub) in grp {
+                out_two.push_str(&format!("\t\t\t\tb'{}' => match rest {{\n", sec));
+                for al in sub {
+                    out_two.push_str(&format!(
+                        "\t\t\t\t\t{:?} => Some(&crate::flat::{} as &crate::Emoji),\n",
+                        &al[2..],
+                        emoji_map.get(al).unwrap()
+                    ));
+                }
+                out_two.push_str("\t\t\t\t\t_ => None,\n");
+                out_two.push_str("\t\t\t\t},\n");
+            }
+            out_two.push_str("\t\t\t\t_ => None,\n");
+            out_two.push_str("\t\t\t},\n");
+        }
+
+        (out_single, out_two)
+    };
+
+    (map_aliasses, match_aliasses)
 }
 
 fn save_flat_constants(constants: &[GroupedConstant]) {
@@ -312,7 +361,7 @@ fn save_grouped_constants(constants: &[GroupedConstant]) {
         .write_all(bytes.as_bytes());
 }
 
-fn save_big_matcher(aliasses: String) {
+fn save_big_matcher(aliasses: (String, String)) {
     let mut context = Context::new();
 
     use chrono::{DateTime, Utc};
@@ -321,7 +370,8 @@ fn save_big_matcher(aliasses: String) {
     let today = format!("{}", now);
     context.insert("Link", EMOJI_URL);
     context.insert("Date", &today);
-    context.insert("Data", &aliasses);
+    context.insert("SingleBytes", &aliasses.0);
+    context.insert("TwoBytes", &aliasses.1);
 
     let bytes = TEMPLATES
         .render("matching.tpl", &context)

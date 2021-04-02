@@ -226,6 +226,17 @@ use emojis::Emoji;
 /// ```
 ///
 pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
+    // make some basic checks
+    if inp.starts_with(':') && inp.ends_with(':') && inp.is_ascii() && inp.len() > 2 {
+        // go on with the middle part
+        parse_pure_alias(&inp[1..(inp.len() - 1)])
+    } else {
+        None
+    }
+}
+
+/// Parses a pice of string into an emoji (no colons)
+fn parse_pure_alias(inp: &str) -> Option<&'static Emoji> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "alloc")] {
             // If we have alloc, we use the faster hash map

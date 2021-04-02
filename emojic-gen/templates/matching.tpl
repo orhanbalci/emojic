@@ -13,12 +13,27 @@ use crate::emojis::OneOrTwo;
 use crate::emojis::TonePair;
 use crate::emojis::Family;
 
+/// Matches string (without colons) to emojis
 pub(crate) fn matching(s: &str) -> Option<&'static crate::Emoji> {
-	match s {
+	let len = s.len();
+	let bytes = s.as_bytes();
 
-		{{ Data }}
+	if len == 0 {
+		None
+	} else if len == 1 {
+		match bytes[0] {
+{{ SingleBytes }}
+			_ => None
+		}
+	} else {
+		let first = bytes[0];
+		let sec = bytes[1];
+		let rest = &s[2..];
 
-		_ => None
+		match first {
+{{ TwoBytes }}
+			_ => None
+		}
 	}
 }
 
