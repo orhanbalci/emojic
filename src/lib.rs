@@ -179,6 +179,7 @@ cfg_if::cfg_if! {
         #[rustfmt::skip]
         mod alias; // Generated module
     } else {
+        #[rustfmt::skip]
         mod matching; // Generated module
     }
 }
