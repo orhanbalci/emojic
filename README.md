@@ -62,6 +62,7 @@ println!(
 );
 ```
 
+
 ## 🖨️ Output
 
 ```text
@@ -91,16 +92,7 @@ As well as iterators to list all the emojis in each group and subgroup:
 emojic::grouped::people_and_body::hands::base_emojis()
 ```
 
-Additionally, it has additional emoji aliases from
-[github/gemoji](https://github.com/github/gemoji).
-
-```rust
-parse_alias(":+1:") // 👍
-parse_alias(":100:") // 💯
-parse_alias(":woman_astronaut:") // 👩‍🚀
-```
-
-Finally, it has functions to generate (arbitrary) country and regional flags.
+Additional, it has functions to generate (arbitrary) country and regional flags.
 
 ```rust
 // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 ∩ 🏴󠁧󠁢󠁳󠁣󠁴󠁿 ⊂ 🇬🇧 ⊄ 🇪🇺
@@ -112,16 +104,34 @@ println!("{} ∩ {} ⊂ {} ⊄ {}",
 )
 ```
 
+Finally, this crate has allows parsing emoji aliases from the [github/gemoji](https://github.com/github/gemoji)
+list via [`parse_alias`](https://docs.rs/emojic/latest/emojic/text/fn.parse_alias.html).
+
+```rust
+parse_alias(":+1:") // 👍
+parse_alias(":100:") // 💯
+parse_alias(":woman_astronaut:") // 👩‍🚀
+```
+
+And it has also an utility to parse and replace these emoji aliases in text via
+[`parse_text`](https://docs.rs/emojic/latest/emojic/text/fn.parse_text.html).
+
+```rust
+// a 🥪 consists of 🍞, 🥓, and some 🧀
+parse_text("a :sandwich: consists of :bread:, :bacon:, and some :cheese:")
+```
+
+
 ## 🔭 Examples
 
 For more examples have a look at the
 [examples](https://github.com/orhanbalci/emojic/tree/master/examples) folder.
 
+
 ## 🧩 Crate features
 
 This crate is `no_std` by default, means it should be usable in WASM and other restricted
-platforms. However, some functions such as [`parse_alias`](https://docs.rs/emojic/latest/emojic/fn.parse_alias.html) and the
-ad-hoc flag functions need the `alloc` crate (normally part of `std`),
+platforms. However, some additional functions need the `alloc` crate (normally part of `std`),
 thus it is enabled by default.
 
 - `default`: (implies `alloc`) \
@@ -133,8 +143,9 @@ thus it is enabled by default.
   ```
 - `alloc`: (implies `hashbrown` and `lazy_static`) \
   Requires a global allocator,
-  enables various functions such as `parse_alias` as well
-  as the ad-hoc flag functions (the flag constants are unaffected).
+  enables some additional functions: the [`parse_text`](https://docs.rs/emojic/latest/emojic/text/fn.parse_text.html) function and the
+  ad-hoc flag-functions ([`country_flag`](https://docs.rs/emojic/latest/emojic/fn.country_flag.html) & [`regional_flag`](https://docs.rs/emojic/latest/emojic/fn.regional_flag.html))
+  (the flag constants are unaffected).
 
   Notice, that `lazy_static`, by default, pulls-in `std` to use mutices for waiting.
   This is good if you do have `std` available, and bad if not. However, the alternative is
