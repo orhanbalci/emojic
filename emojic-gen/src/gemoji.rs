@@ -17,7 +17,7 @@ pub const GEMOJI_URL: &'static str =
     "https://raw.githubusercontent.com/github/gemoji/master/db/emoji.json";
 
 pub fn make_alias(name: &str) -> String {
-    format!(":{}:", name)
+    format!("{}", name)
 }
 
 pub fn fetch_gemoji() -> HashMap<String, String> {

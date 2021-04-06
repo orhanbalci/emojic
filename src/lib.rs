@@ -3,9 +3,15 @@
 // Enable annotating features requirements in docs
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 
+// This crate is entirely safe
+#![forbid(unsafe_code)]
+
 // Ensures that `pub` means published in the public API.
 // This property is useful for reasoning about breaking API changes.
 #![deny(unreachable_pub)]
+
+// Denies invalid links in docs
+#![deny(broken_intra_doc_links)]
 
 //!
 //! Emoji constants for your rusty strings. This crate is inspired by the Go library
@@ -63,6 +69,7 @@
 //! );
 //! ```
 //!
+//!
 //! ## 🖨️ Output
 //!
 //! ```text
@@ -96,25 +103,7 @@
 //! # assert_eq!("👏🙏🤝👐🤲🙌", text);
 //! ```
 //!
-//! Additionally, it has additional emoji aliases from
-//! [github/gemoji](https://github.com/github/gemoji).
-//!
-//! ```rust
-//! # #[cfg(feature = "alloc")]{ // Only with `alloc`
-//! # use emojic::parse_alias;
-//! # assert_eq!(Some("👍"),
-//! parse_alias(":+1:") // 👍
-//! # .map(|e| e.grapheme));
-//! # assert_eq!(Some("💯"),
-//! parse_alias(":100:") // 💯
-//! # .map(|e| e.grapheme));
-//! # assert_eq!(Some("👩‍🚀"),
-//! parse_alias(":woman_astronaut:") // 👩‍🚀
-//! # .map(|e| e.grapheme));
-//! # } // Only with `alloc`
-//! ```
-//!
-//! Finally, it has functions to generate (arbitrary) country and regional flags.
+//! Additional, it has functions to generate (arbitrary) country and regional flags.
 //!
 //! ```rust
 //! # #[cfg(feature = "alloc")]{ // Only with `alloc`
@@ -130,16 +119,46 @@
 //! # } // Only with `alloc`
 //! ```
 //!
+//! Finally, this crate has allows parsing emoji aliases from the [github/gemoji](https://github.com/github/gemoji)
+//! list via [`parse_alias`](crate::text::parse_alias).
+//!
+//! ```rust
+//! # use emojic::parse_alias;
+//! # assert_eq!(Some("👍"),
+//! parse_alias(":+1:") // 👍
+//! # .map(|e| e.grapheme));
+//! # assert_eq!(Some("💯"),
+//! parse_alias(":100:") // 💯
+//! # .map(|e| e.grapheme));
+//! # assert_eq!(Some("👩‍🚀"),
+//! parse_alias(":woman_astronaut:") // 👩‍🚀
+//! # .map(|e| e.grapheme));
+//! ```
+//!
+//! And it has also an utility to parse and replace these emoji aliases in text via
+//! [`parse_text`](crate::text::parse_text).
+//!
+//! ```rust
+//! # #[cfg(feature = "alloc")] { // only with alloc
+//! # use emojic::text::parse_text;
+//! // a 🥪 consists of 🍞, 🥓, and some 🧀
+//! # assert_eq!("a 🥪 consists of 🍞, 🥓, and some 🧀".to_string(),
+//! parse_text("a :sandwich: consists of :bread:, :bacon:, and some :cheese:")
+//! # );
+//! # } // only with alloc
+//! ```
+//!
+//!
 //! ## 🔭 Examples
 //!
 //! For more examples have a look at the
 //! [examples](https://github.com/orhanbalci/emojic/tree/master/examples) folder.
 //!
+//!
 //! ## 🧩 Crate features
 //!
 //! This crate is `no_std` by default, means it should be usable in WASM and other restricted
-//! platforms. However, some functions such as [`parse_alias`](crate::parse_alias) and the
-//! ad-hoc flag functions need the `alloc` crate (normally part of `std`),
+//! platforms. However, some additional functions need the `alloc` crate (normally part of `std`),
 //! thus it is enabled by default.
 //!
 //! - `default`: (implies `alloc`) \
@@ -151,8 +170,9 @@
 //!   ```
 //! - `alloc`: (implies `hashbrown` and `lazy_static`) \
 //!   Requires a global allocator,
-//!   enables various functions such as `parse_alias` as well
-//!   as the ad-hoc flag functions (the flag constants are unaffected).
+//!   enables some additional functions: the [`parse_text`](crate::text::parse_text) function and the
+//!   ad-hoc flag-functions ([`country_flag`](crate::country_flag) & [`regional_flag`](crate::regional_flag))
+//!   (the flag constants are unaffected).
 //!
 //!   Notice, that `lazy_static`, by default, pulls-in `std` to use mutices for waiting.
 //!   This is good if you do have `std` available, and bad if not. However, the alternative is
@@ -171,21 +191,30 @@
 //!
 //!
 
-#[cfg(feature = "alloc")]
-extern crate alloc;
+use cfg_if::cfg_if;
 
-#[cfg(feature = "alloc")]
-use alloc::string::String;
+cfg_if! {
+    if #[cfg(feature = "alloc")] {
+        extern crate alloc;
+        use alloc::string::String;
 
-#[rustfmt::skip]
-#[cfg(feature = "alloc")]
-mod alias; // Generated module
+        #[rustfmt::skip]
+        mod alias; // Generated module
+    } else {
+        #[rustfmt::skip]
+        mod matching; // Generated module
+    }
+}
 
 #[rustfmt::skip]
 pub mod flat; // Generated module
 
 #[rustfmt::skip]
 pub mod grouped; // Generated module
+
+pub mod text;
+// Reexported for backwards compatibility
+pub use text::parse_alias;
 
 pub mod emojis;
 pub use emojis::Gender;
@@ -194,37 +223,6 @@ pub use emojis::Pair;
 pub use emojis::Tone;
 
 use emojis::Emoji;
-
-/// Parses the given Emoji name into a unicode Emoji.
-///
-/// This function accepts strings of the form `:name:` and looks up an emojis for it.
-/// The list of valid names is taken from: [github/gemoji](https://github.com/github/gemoji)
-/// And additonally all the constant names (as listed in [`crate::flat`]) are also valid aliases
-/// when spelled in lowercase.
-///
-/// # Examples
-///
-/// ```
-/// use emojic::parse_alias;
-///
-/// // gemoji style
-/// assert_eq!(
-///     Some(&*emojic::flat::THUMBS_UP),
-///     parse_alias(":+1:") //👍
-/// );
-///
-/// // constant name style
-/// assert_eq!(
-///     Some(&emojic::flat::ALIEN_MONSTER),
-///     parse_alias(":alien_monster:") //👾
-/// );
-/// ```
-///
-#[cfg(feature = "alloc")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "alloc")))]
-pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
-    alias::GEMOJI_MAP.get(inp).cloned()
-}
 
 /// Generate an ad-hoc country flag.
 ///
@@ -246,6 +244,13 @@ pub fn parse_alias(inp: &str) -> Option<&'static Emoji> {
 ///     country_flag("EU"), // 🇪🇺
 ///     emojic::flat::FLAG_EUROPEAN_UNION.to_string()
 /// );
+/// ```
+///
+/// But there is no validity test:
+///
+/// ```rust
+/// use emojic::country_flag;
+///
 /// println!("{}",
 ///     country_flag("ZZ"), // 🇿🇿 (an invalid flag)
 /// );
@@ -305,6 +310,13 @@ pub fn contry_flag(country_code: &str) -> String {
 ///     regional_flag("GB-ENG"), // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 (England region of United Kingdom (GB))
 ///     emojic::flat::FLAG_ENGLAND.to_string()
 /// );
+/// ```
+///
+/// But there is no validity test:
+///
+/// ```rust
+/// use emojic::regional_flag;
+///
 /// println!("{}",
 ///     regional_flag("ZZ-ABC") // 🏴󠁺󠁺󠁡󠁢󠁣󠁿 (an invalid flag)
 /// );
@@ -337,17 +349,14 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(feature = "alloc")]
-    fn parse_test() {
-        assert_eq!(
-            Some(&crate::flat::FLAG_ECUADOR),
-            parse_alias(":flag_ecuador:")
-        );
+	#[cfg(feature = "alloc")]
+    fn country_flag_test() {
+        assert_eq!(crate::flat::FLAG_GERMANY.grapheme, &country_flag("DE"));
     }
 
     #[test]
-    #[cfg(feature = "alloc")]
-    fn parse_fail() {
-        assert_eq!(None, parse_alias(":hebele:"));
+	#[cfg(feature = "alloc")]
+    fn regional_flag_test() {
+        assert_eq!(crate::flat::FLAG_ENGLAND.grapheme, &regional_flag("GB-ENG"));
     }
 }

@@ -17,7 +17,8 @@ use crate::emojis::TonePair;
 use crate::emojis::Family;
 
 lazy_static!{
-    pub static ref GEMOJI_MAP: HashMap<&'static str, &'static crate::Emoji> = [
+	/// Maps string (without colons) to emojis
+    pub(crate) static ref GEMOJI_MAP: HashMap<&'static str, &'static crate::Emoji> = [
         {{ Data }}
     ].iter().copied().collect();
 }
