@@ -27,7 +27,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! emojic = "0.3"
+//! emojic = "0.4"
 //! ```
 //!
 //! ## 🔧 Example
@@ -165,7 +165,7 @@
 //!   Automatically enabled if not opt-out:
 //!   ```toml
 //!   [dependencies.emojic]
-//!   version = "0.3"
+//!   version = "0.4"
 //!   default-features = false
 //!   ```
 //! - `alloc`: (implies `hashbrown` and `lazy_static`) \
