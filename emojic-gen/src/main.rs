@@ -27,8 +27,13 @@ const EMOJI_URL: &str = "https://unicode.org/Public/emoji/13.1/emoji-test.txt";
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
-        let mut tera = match Tera::new("templates/**/*.tpl") {
-            Ok(t) => t,
+        let mut tera = match Tera::new("templates/**/*.tera") {
+            Ok(t) => {
+                for template_name in t.get_template_names() {
+                    println!("Found template: {}", template_name);
+                }
+                t
+            }
             Err(e) => {
                 println!("Parsing error(s): {}", e);
                 ::std::process::exit(1);
@@ -335,7 +340,7 @@ fn save_flat_constants(constants: &[GroupedConstant]) {
     context.insert("Constants", &constants);
 
     let bytes = TEMPLATES
-        .render("flat.tpl", &context)
+        .render("flat.tera", &context)
         .expect("Failed to render flat");
     File::create("./flat.rs")
         .unwrap()
@@ -354,7 +359,7 @@ fn save_grouped_constants(constants: &[GroupedConstant]) {
     context.insert("Constants", &constants);
 
     let bytes = TEMPLATES
-        .render("grouped.tpl", &context)
+        .render("grouped.tera", &context)
         .expect("Failed to render grouped");
     File::create("./grouped.rs")
         .unwrap()
@@ -374,7 +379,7 @@ fn save_big_matcher(aliasses: (String, String)) {
     context.insert("TwoBytes", &aliasses.1);
 
     let bytes = TEMPLATES
-        .render("matching.tpl", &context)
+        .render("matching.tera", &context)
         .expect("Failed to render matching");
     File::create("./matching.rs")
         .unwrap()
@@ -393,7 +398,7 @@ fn save_aliasses(aliasses: String) {
     context.insert("Data", &aliasses);
 
     let bytes = TEMPLATES
-        .render("alias.tpl", &context)
+        .render("alias.tera", &context)
         .expect("Failed to render alias");
     File::create("./alias.rs")
         .unwrap()
