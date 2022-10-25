@@ -19,4 +19,4 @@
 //! println!("{}", emojic::flat::FRAMED_PICTURE);
 //! ```
 
-pub const EMOJI_REGEX: &str = "{{ regex_text }}";
+pub const EMOJI_REGEX: &str = r#"{{ regex_text }}"#;

@@ -19,6 +19,8 @@ use std::{
     io::{BufRead, BufReader, Write},
 };
 
+use regex;
+
 // mod constants;
 use tera::Context;
 use tera::Tera;
@@ -62,8 +64,8 @@ fn main() {
     println!("Sorting...");
     e.sort();
 
-    let regex = generate_regex(&e);
-    save_regex(&regex);
+    let regex_str = generate_regex(&e);
+    save_regex(&regex_str);
 
     let constants = generate_constants(&e);
     save_flat_constants(&constants);
@@ -94,7 +96,9 @@ fn generate_regex(e: &Emojis) -> String {
                 .iter()
                 .map(|s| {
                     // Collect all emojis
-                    s.emoji_iter().map(|emoji| emoji.graphemes())
+                    s.emoji_iter()
+                        .map(|emoji| regex::escape(&emoji.graphemes()))
+                    //.chars().map(|c| c.escape_unicode()))
                 })
                 .flatten()
         })

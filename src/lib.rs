@@ -1,15 +1,11 @@
 #![no_std]
-
 // Enable annotating features requirements in docs
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
-
 // This crate is entirely safe
 #![forbid(unsafe_code)]
-
 // Ensures that `pub` means published in the public API.
 // This property is useful for reasoning about breaking API changes.
 #![deny(unreachable_pub)]
-
 // Denies invalid links in docs
 #![deny(broken_intra_doc_links)]
 
@@ -206,6 +202,9 @@ cfg_if! {
     }
 }
 
+mod regex;
+pub use crate::regex::EMOJI_REGEX;
+
 #[rustfmt::skip]
 pub mod flat; // Generated module
 
@@ -274,7 +273,6 @@ pub fn country_flag(country_code: &str) -> String {
         .collect()
 }
 
-
 // TODO: Remove `contry_flag` (without U) before releasing v0.4.0!
 
 // That's embarrassing: Originally `country_flag` had been misspelled as `contry_flag`
@@ -289,7 +287,6 @@ pub fn country_flag(country_code: &str) -> String {
 pub fn contry_flag(country_code: &str) -> String {
     country_flag(country_code)
 }
-
 
 /// Generate an ad-hoc regional flag.
 ///
@@ -345,18 +342,41 @@ pub fn regional_flag(regional_code: &str) -> String {
 }
 
 #[cfg(test)]
+#[macro_use]
+extern crate std;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-	#[cfg(feature = "alloc")]
+    #[cfg(feature = "alloc")]
     fn country_flag_test() {
         assert_eq!(crate::flat::FLAG_GERMANY.grapheme, &country_flag("DE"));
     }
 
     #[test]
-	#[cfg(feature = "alloc")]
+    #[cfg(feature = "alloc")]
     fn regional_flag_test() {
         assert_eq!(crate::flat::FLAG_ENGLAND.grapheme, &regional_flag("GB-ENG"));
+    }
+
+    #[test]
+    #[cfg(feature = "regex")]
+    fn regex_is_valid_test() -> Result<(), ::regex::Error> {
+        let re = ::regex::Regex::new(EMOJI_REGEX)?;
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "regex")]
+    fn regex_single_compound_emoji_test() -> Result<(), ::regex::Error> {
+        let re = ::regex::Regex::new(&format!("({})", EMOJI_REGEX))?;
+        // taken from the emoji docs 👩🏻‍❤‍💋‍👨🏿 E13.1 kiss: woman, man, light skin tone, dark skin tone
+        let test_str =
+            "\u{1F469}\u{1F3FB}\u{200D}\u{2764}\u{200D}\u{1F48B}\u{200D}\u{1F468}\u{1F3FF}";
+
+        assert!(re.is_match_at(test_str, 0));
+        Ok(())
     }
 }
