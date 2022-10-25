@@ -19,8 +19,4 @@
 //! println!("{}", emojic::flat::FRAMED_PICTURE);
 //! ```
 
-use regex::Regex;
-
-lazy_static! {
-    pub static ref HASHTAG_REGEX: Regex = Regex::new("{{ regex_text }}").unwrap();
-}
+pub const EMOJI_REGEX: &str = "{{ regex_text }}";
