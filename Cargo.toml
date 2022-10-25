@@ -18,15 +18,17 @@ required-features = ["alloc"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["alloc"]   # default features are automatically enables (if not opt-out)
+default = ["alloc", "regex"]   # default features are automatically enables (if not opt-out)
 alloc = [             # requires global allocator, enables various functions such as parse_alias
     "hashbrown",
     "lazy_static"
 ]
 doc_cfg = []          # requires nightly compiler, only intended for docs.rs builds (enables usage of doc_cfg)
+regex = ["dep:regex"]
 
 [dependencies]
 cfg-if = "1.0"
+regex = { version = "1.6.0", optional = true}
 
 [dependencies.lazy_static]
 version = "1.4.0"

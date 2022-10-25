@@ -62,6 +62,9 @@ fn main() {
     println!("Sorting...");
     e.sort();
 
+    let regex = generate_regex(&e);
+    save_regex(&regex);
+
     let constants = generate_constants(&e);
     save_flat_constants(&constants);
     save_grouped_constants(&constants);
@@ -79,6 +82,52 @@ fn read_lines<'a>(content: &Vec<u8>, mut f: impl FnMut(&mut str) -> ()) {
             Err(_) => (),
         }
     }
+}
+
+fn generate_regex(e: &Emojis) -> String {
+    let all_emojis: Vec<String> = e
+        .groups
+        .iter()
+        .map(|g| {
+            // Collect all subgroups
+            g.subgroups
+                .iter()
+                .map(|s| {
+                    // Collect all emojis
+                    s.emoji_iter().map(|emoji| emoji.graphemes())
+                })
+                .flatten()
+        })
+        .flatten()
+        .collect();
+    // somehow these ranges from the JS regex don't work: \xA9\xAA\xAE\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1
+    format!(
+        "[#\u{FE5F}\u{FF03}]([(?:[\\*\\+\x2D0-9A-Z_a-z({})])",
+        all_emojis.join("|")
+    )
+    // format!("({})", &all_emojis.join("|"))
+    // let all_emoji: String = all_emoji_regex();
+    // pub static ref ALL_EMOJIS: &'static str = _ALL_EMOJIS.as_str();
+    // pub static ref HASHTAG_REGEX: Regex = "[#\u{FE5F}\u{FF03}]";
+}
+
+fn save_regex(regex: &str) {
+    let mut context = Context::new();
+
+    use chrono::{DateTime, Utc};
+    let now: DateTime<Utc> = Utc::now();
+
+    let today = format!("{}", now);
+    context.insert("Link", EMOJI_URL);
+    context.insert("Date", &today);
+    context.insert("regex_text", &regex);
+
+    let bytes = TEMPLATES
+        .render("regex.tera", &context)
+        .expect("Failed to render flat");
+    File::create("./regex.rs")
+        .unwrap()
+        .write_all(bytes.as_bytes());
 }
 
 fn fetch_emojis() -> Result<Emojis, String> {
