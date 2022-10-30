@@ -19,8 +19,6 @@ use std::{
     io::{BufRead, BufReader, Write},
 };
 
-use regex;
-
 // mod constants;
 use tera::Context;
 use tera::Tera;
@@ -64,13 +62,23 @@ fn main() {
     println!("Sorting...");
     e.sort();
 
-    let mut all_emojis: Vec<String> = generate_all_graphemes(&e);
+    let constants = generate_constants(&e);
+    // let mut all_emojis: Vec<String> = generate_all_graphemes(&e);
+    let mut all_emojis: Vec<String> = constants
+        .iter()
+        .map(|g| &g.subgroups)
+        .flatten()
+        .map(|sgc| sgc.emojis.iter())
+        .flatten()
+        .map(|ec| ec.full_list_graphemes.iter())
+        .flatten()
+        .map(|s| s.to_owned())
+        .collect();
     all_emojis.sort_by_key(|g| -(g.len() as i128));
     let all_emojis = all_emojis; // make immutable now
     let regex_str = generate_regex(&all_emojis);
     save_regex(&regex_str, &all_emojis, all_emojis.len());
 
-    let constants = generate_constants(&e);
     save_flat_constants(&constants);
     save_grouped_constants(&constants);
 
@@ -212,6 +220,7 @@ struct EmojiConstant<'a> {
     pub identifier: &'a str,
     pub preview_emojis: String,
     pub source_code: String,
+    pub full_list_graphemes: Vec<String>,
     pub full_list_accessors: Vec<String>,
     pub default_list_accessors: Vec<String>,
 }
@@ -232,6 +241,12 @@ fn generate_constants(e: &Emojis) -> Vec<GroupedConstant> {
                         .map(|emoji| {
                             println!("Writing emoji {:?}", emoji.identifier());
 
+                            let full_list_graphemes = emoji
+                                .full_emoji_list()
+                                .into_iter()
+                                .map(|(_, _, grapheme)| grapheme.to_string())
+                                .collect();
+
                             let full_list_accessors = emoji
                                 .full_emoji_list()
                                 .into_iter()
@@ -248,6 +263,7 @@ fn generate_constants(e: &Emojis) -> Vec<GroupedConstant> {
                                 identifier: emoji.identifier(),
                                 preview_emojis: emoji.graphemes(),
                                 source_code: emoji.to_source_code(),
+                                full_list_graphemes,
                                 full_list_accessors,
                                 default_list_accessors,
                             }
