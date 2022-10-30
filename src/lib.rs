@@ -203,8 +203,8 @@ cfg_if! {
     }
 }
 
-mod regex;
-pub use crate::regex::{ALL_VARIANTS, EMOJI_REGEX, NUM_EMOJI_VARIANTS};
+#[rustfmt::skip]
+pub mod regex; // Generated module
 
 #[rustfmt::skip]
 pub mod flat; // Generated module
@@ -365,14 +365,14 @@ mod tests {
     #[test]
     #[cfg(feature = "regex")]
     fn regex_is_valid_test() -> Result<(), ::regex::Error> {
-        let re = ::regex::Regex::new(EMOJI_REGEX)?;
+        let re = ::regex::Regex::new(crate::regex::EMOJI_REGEX)?;
         Ok(())
     }
 
     #[test]
     #[cfg(feature = "regex")]
     fn regex_single_compound_emoji_test() -> Result<(), ::regex::Error> {
-        let re = ::regex::Regex::new(&format!("({})", EMOJI_REGEX))?;
+        let re = ::regex::Regex::new(&format!("({})", crate::regex::EMOJI_REGEX))?;
         // taken from the emoji docs 👩🏻‍❤‍💋‍👨🏿 E13.1 kiss: woman, man, light skin tone, dark skin tone
         let test_str =
             "\u{1F469}\u{1F3FB}\u{200D}\u{2764}\u{200D}\u{1F48B}\u{200D}\u{1F468}\u{1F3FF}";

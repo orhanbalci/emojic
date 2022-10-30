@@ -28,4 +28,6 @@ pub const NUM_EMOJI_VARIANTS: usize = {{ num_emojis }};
 
 pub const EMOJI_REGEX: &str = r#"{{ regex_text }}"#;
 
-pub const ALL_VARIANTS: &[&'static str; {{ num_emojis }}] = &[{% for e in all_emojis %}"{{ e }}"{%if not loop.last %},{% endif %}{% endfor %}];
+pub const ALL_VARIANTS: &'static [&'static str; {{ num_emojis }}] = &[
+    {% for e in all_emojis %}"{{ e }}"{%if not loop.last %},{% endif %}{% endfor %}
+];

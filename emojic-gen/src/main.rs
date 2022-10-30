@@ -96,14 +96,16 @@ fn generate_all_graphemes(e: &Emojis) -> Vec<String> {
         .flatten()
         .map(|sg| sg.emojis.values())
         .flatten()
-        .map(|e| {
-            let escaped_grapheme = ::regex::escape(&e.grapheme);
-            escaped_grapheme
-        })
+        .map(|e| e.grapheme.to_owned())
         .collect()
 }
 
 fn generate_regex(all_emojis: &Vec<String>) -> String {
+    let all_emojis: Vec<String> = all_emojis
+        .to_owned()
+        .into_iter()
+        .map(|e| ::regex::escape(&e))
+        .collect();
     all_emojis.join("|")
 }
 
