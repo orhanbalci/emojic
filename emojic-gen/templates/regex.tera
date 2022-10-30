@@ -19,4 +19,13 @@
 //! println!("{}", emojic::flat::FRAMED_PICTURE);
 //! ```
 
+// when using the regex feature we do need to use the std crate
+#[cfg(feature = "regex")]
+extern crate std;
+
+// The total number of emoji variants currently supported by the crate.
+pub const NUM_EMOJI_VARIANTS: usize = {{ num_emojis }};
+
 pub const EMOJI_REGEX: &str = r#"{{ regex_text }}"#;
+
+pub const ALL_VARIANTS: &[&'static str; {{ num_emojis }}] = &[{% for e in all_emojis %}"{{ e }}"{%if not loop.last %},{% endif %}{% endfor %}];

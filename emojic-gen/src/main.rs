@@ -64,8 +64,11 @@ fn main() {
     println!("Sorting...");
     e.sort();
 
-    let regex_str = generate_regex(&e);
-    save_regex(&regex_str);
+    let mut all_emojis: Vec<String> = generate_all_graphemes(&e);
+    all_emojis.sort_by_key(|g| -(g.len() as i128));
+    let all_emojis = all_emojis; // make immutable now
+    let regex_str = generate_regex(&all_emojis);
+    save_regex(&regex_str, &all_emojis, all_emojis.len());
 
     let constants = generate_constants(&e);
     save_flat_constants(&constants);
@@ -86,29 +89,31 @@ fn read_lines<'a>(content: &Vec<u8>, mut f: impl FnMut(&mut str) -> ()) {
     }
 }
 
-fn generate_regex(e: &Emojis) -> String {
-    let all_emojis: Vec<String> = e
-        .groups
+fn generate_all_graphemes(e: &Emojis) -> Vec<String> {
+    e.groups
         .iter()
-        .map(|g| {
-            // Collect all subgroups
-            g.subgroups
-                .iter()
-                .map(|s| {
-                    // Collect all emojis
-                    s.emoji_iter()
-                        .map(|emoji| regex::escape(&emoji.graphemes()))
-                    //.chars().map(|c| c.escape_unicode()))
-                })
-                .flatten()
-        })
+        .map(|g| g.subgroups.iter())
         .flatten()
-        .collect();
+        .map(|sg| sg.emojis.values())
+        .flatten()
+        .map(|e| {
+            let escaped_grapheme = ::regex::escape(&e.grapheme);
+            escaped_grapheme
+        })
+        .collect()
+}
+
+fn generate_regex(all_emojis: &Vec<String>) -> String {
     all_emojis.join("|")
 }
 
-fn save_regex(regex: &str) {
+fn save_regex(regex: &str, all_emojis: &Vec<String>, num_emojis: usize) {
     let mut context = Context::new();
+
+    let all_emojis: Vec<String> = all_emojis
+        .iter()
+        .map(|e| e.escape_unicode().to_string())
+        .collect();
 
     use chrono::{DateTime, Utc};
     let now: DateTime<Utc> = Utc::now();
@@ -117,6 +122,8 @@ fn save_regex(regex: &str) {
     context.insert("Link", EMOJI_URL);
     context.insert("Date", &today);
     context.insert("regex_text", &regex);
+    context.insert("num_emojis", &num_emojis);
+    context.insert("all_emojis", &all_emojis);
 
     let bytes = TEMPLATES
         .render("regex.tera", &context)

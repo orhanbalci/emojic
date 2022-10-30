@@ -1,3 +1,4 @@
+// by default we don't rely on std, but when using the regex feature we need it
 #![no_std]
 // Enable annotating features requirements in docs
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
@@ -203,7 +204,7 @@ cfg_if! {
 }
 
 mod regex;
-pub use crate::regex::EMOJI_REGEX;
+pub use crate::regex::{ALL_VARIANTS, EMOJI_REGEX, NUM_EMOJI_VARIANTS};
 
 #[rustfmt::skip]
 pub mod flat; // Generated module
