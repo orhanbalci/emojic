@@ -204,6 +204,7 @@ cfg_if! {
 }
 
 #[rustfmt::skip]
+#[cfg(feature = "regex")]
 pub mod regex; // Generated module
 
 #[rustfmt::skip]
