@@ -56,7 +56,7 @@ println!(
     GENIE.gender(Gender::Female),
 );
 println!(
-    "Mixing attributes: men & light: {} and women & drak: {}",
+    "Mixing attributes: men & light: {} and women & dark: {}",
     PERSON_TIPPING_HAND.gender(Gender::Male).tone(Tone::Light),
     PERSON_TIPPING_HAND.gender(Gender::Female).tone(Tone::Dark),
 );
@@ -71,7 +71,7 @@ I'm 👨‍💻 from 🇹🇷
 Different skin tones default 👍 light 👌🏻 dark 🤙🏿
 Multiple skin tones: default: 🧑‍🤝‍🧑, same: 🧑🏽‍🤝‍🧑🏽 different: 🧑🏻‍🤝‍🧑🏿
 Different sexes: default: 🧞 male: 🧞‍♂️, female: 🧞‍♀️
-Mixing attributes: men & light: 💁🏻‍♂️ and women & drak: 💁🏿‍♀️
+Mixing attributes: men & light: 💁🏻‍♂️ and women & dark: 💁🏿‍♀️
 ```
 
 This crate contains emojis constants based on the
