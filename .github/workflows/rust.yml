@@ -24,14 +24,7 @@ jobs:
       with:
         crate: cargo-rdme
         version: "1.0"
-    - name: Verify README updated
-      continue-on-error: true
-      id: readme_updated
-      run: |
-        cargo rdme --check
-        echo "README_CHANGED=$?" >> $GITHUB_OUTPUT
     - name: Run cargo-rdme
-      if: failure()
       run: cargo rdme
     - name: Open PR if README updated.
       if: success()
