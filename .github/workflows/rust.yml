@@ -31,10 +31,10 @@ jobs:
         cargo rdme --check
         echo "README_CHANGED=$?" >> $GITHUB_OUTPUT
     - name: Run cargo-rdme
-      if: steps.readme_updated.outputs.README_CHANGED == '3'
+      if: failure()
       run: cargo rdme
     - name: Open PR if README updated.
-      if: steps.readme_updated.outputs.README_CHANGED == '3'
+      if: success()
       uses: peter-evans/create-pull-request@v4
       with:
         add-paths: |
