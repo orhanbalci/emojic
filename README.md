@@ -120,7 +120,6 @@ And it has also an utility to parse and replace these emoji aliases in text via
 // a 🥪 consists of 🍞, 🥓, and some 🧀
 parse_text("a :sandwich: consists of :bread:, :bacon:, and some :cheese:")
 ```
-## This is a test header to test sync-readme github ci integration
 
 ## 🔭 Examples
 
