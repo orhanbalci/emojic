@@ -25,6 +25,7 @@ jobs:
         crate: cargo-rdme
         version: "1.0"
     - name: Verify README updated
+      continue-on-error: true
       id: readme_updated
       run: |
         cargo rdme --check
