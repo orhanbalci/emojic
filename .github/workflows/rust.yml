@@ -20,3 +20,17 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+  
+  update_readme:
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Install cargo-sync-readme
+      uses: baptiste0928/cargo-install@v1
+      with:
+        crate: cargo-sync-readme
+        version: "1.1"
+
+    - name: Run cargo-sync-readme
+      run: cargo sync-readme
