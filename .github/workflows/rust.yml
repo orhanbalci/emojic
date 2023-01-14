@@ -27,7 +27,6 @@ jobs:
     - name: Run cargo-rdme
       run: cargo rdme
     - name: Open PR if README updated.
-      if: success()
       uses: peter-evans/create-pull-request@v4
       with:
         add-paths: |
