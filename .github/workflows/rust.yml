@@ -35,4 +35,7 @@ jobs:
 
     - name: Open PR if README updated.
       if: steps.verify-changed-files.outputs.files_changed == 'true'
-      run: echo "README UPDATED"
+      uses: peter-evans/create-pull-request@v4
+      with:
+        add-paths: |
+            README.md
