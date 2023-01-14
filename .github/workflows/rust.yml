@@ -26,7 +26,9 @@ jobs:
         version: "1.0"
     - name: Verify README updated
       id: readme_updated
-      run: echo "README_CHANGED=$(cargo rdme --check)" >> $GITHUB_OUTPUT
+      run: |
+        cargo rdme --check
+        echo "README_CHANGED=$?" >> $GITHUB_OUTPUT
     - name: Run cargo-rdme
       if: steps.readme_updated.outputs.README_CHANGED == '3'
       run: cargo rdme
