@@ -183,7 +183,7 @@
 //!   ```
 //!   Also see: <https://github.com/rust-lang-nursery/lazy-static.rs/issues/150>
 //!
-//!
+//! # Test readme sync
 //!
 
 use cfg_if::cfg_if;
