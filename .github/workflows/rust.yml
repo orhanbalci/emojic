@@ -23,7 +23,7 @@ jobs:
       uses: baptiste0928/cargo-install@v1
       with:
         crate: cargo-rdme
-        version: "1.1"
+        version: "1.0"
     - name: Verify README updated
       id: readme_updated
       run: echo "::set-output name=README_CHANGED::$(cargo rdme --check)"
