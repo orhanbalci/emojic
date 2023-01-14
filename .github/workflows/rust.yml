@@ -19,7 +19,7 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose        
-    - name: Install cargo-sync-readme
+    - name: Install cargo-rdme
       uses: baptiste0928/cargo-install@v1
       with:
         crate: cargo-rdme
@@ -28,10 +28,10 @@ jobs:
       id: readme_updated
       run: echo "::set-output name=README_CHANGED::$(cargo rdme --check)"
     - name: Run cargo-rdme
-      if: steps.readme_updated.outputs.README_CHANGES == '1'
+      if: steps.readme_updated.outputs.README_CHANGES == '3'
       run: cargo rdme
     - name: Open PR if README updated.
-      if: steps.readme_updated.outputs.README_CHANGES == '1'
+      if: steps.readme_updated.outputs.README_CHANGES == '3'
       uses: peter-evans/create-pull-request@v4
       with:
         add-paths: |
