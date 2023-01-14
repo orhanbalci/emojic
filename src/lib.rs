@@ -143,7 +143,6 @@
 //! # );
 //! # } // only with alloc
 //! ```
-//! ## This is a test header to test sync-readme github ci integration
 //!
 //! ## 🔭 Examples
 //!
