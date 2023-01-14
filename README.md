@@ -160,7 +160,6 @@ thus it is enabled by default.
   ```
   Also see: <https://github.com/rust-lang-nursery/lazy-static.rs/issues/150>
 
-## Test readme sync
 
 <!-- cargo-rdme end -->
 
