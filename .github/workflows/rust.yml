@@ -22,19 +22,16 @@ jobs:
     - name: Install cargo-sync-readme
       uses: baptiste0928/cargo-install@v1
       with:
-        crate: cargo-sync-readme
+        crate: cargo-rdme
         version: "1.1"
-    - name: Run cargo-sync-readme
-      run: cargo sync-readme
     - name: Verify README updated
-      uses: tj-actions/verify-changed-files@v13
-      id: verify-changed-files
-      with:
-        files: |
-          README.md
-
+      id: readme_updated
+      run: echo "::set-output name=README_CHANGED::$(cargo rdme --check)"
+    - name: Run cargo-rdme
+      if: steps.readme_updated.outputs.README_CHANGES == '1'
+      run: cargo rdme
     - name: Open PR if README updated.
-      if: steps.verify-changed-files.outputs.files_changed == 'true'
+      if: steps.readme_updated.outputs.README_CHANGES == '1'
       uses: peter-evans/create-pull-request@v4
       with:
         add-paths: |
