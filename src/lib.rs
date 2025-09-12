@@ -23,7 +23,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! emojic = "0.4"
+//! emojic = "0.5"
 //! ```
 //!
 //! ## 🔧 Example
