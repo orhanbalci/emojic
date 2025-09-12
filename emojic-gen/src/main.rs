@@ -23,7 +23,7 @@ use std::{
 use tera::Context;
 use tera::Tera;
 
-const EMOJI_URL: &str = "https://unicode.org/Public/emoji/13.1/emoji-test.txt";
+const EMOJI_URL: &str = "https://unicode.org/Public/emoji/16.0/emoji-test.txt";
 
 lazy_static! {
     static ref TEMPLATES: Tera = {

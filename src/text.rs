@@ -145,7 +145,6 @@ impl<'a> EmojiTextParser<'a> {
         Self {
             original,
             next_pos: 0,
-            /// The very beginning is never a emoji
             emoji_fragment_start: false,
         }
     }

@@ -22,5 +22,5 @@ attributes (such as skin tone, gender, and hair style).
 And then feed this list of emojis and emoji variants to the
 [Tera](https://crates.io/crates/tera) templates under
 the [`templates`](./templates) folder and store the generated sources as
-`alias.rs`, `flat.rs`, and `grouped.rs`. These files then can be copied into the
+`alias.rs`, `flat.rs`, `grouped.rs`, and `mathching.rs`. These files then can be copied into the
 [`src`](../src) folder of the `emojic` crate where they are included from `lib.rs`.
