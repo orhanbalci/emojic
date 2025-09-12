@@ -323,10 +323,11 @@ impl<T> WithNoDef<OneOrTwo, T> {
 ///
 /// # Examples
 /// ```
+/// # use emojic::flat::FAMILYE;
 /// # use emojic::flat::FAMILY;
 /// # use emojic::Gender;
 /// # use emojic::Pair;
-/// assert_eq!(FAMILY.to_string(), "👪"); // default, derefs directly to `Emoji`
+/// assert_eq!(FAMILYE.to_string(), "👪"); // default, derefs directly to `Emoji`
 /// assert_eq!(FAMILY.gender((Gender::Male, Gender::Female)).to_string(), "👨‍👧"); // Variant two single genders
 /// assert_eq!(FAMILY.gender((Pair::Males, Pair::Females)).to_string(), "👨‍👨‍👧‍👧"); // Variant with two gender pairs
 /// assert_eq!(FAMILY.gender(Gender::Female.with_children(Pair::Mixed)).to_string(), "👩‍👧‍👦"); // Variant based on composer chain

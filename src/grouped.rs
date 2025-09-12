@@ -6378,10 +6378,10 @@ pub static FLAG_TURKS_AND_CAICOS_ISLANDS :  Emoji = Emoji::new("flag: Turks & Ca
 pub static FLAG_TUVALU :  Emoji = Emoji::new("flag: Tuvalu", Version(2, 0), "🇹🇻"); // flag: Tuvalu
 		
 		#[doc="flag: Türkiye 🇹🇷"]#[doc=""]#[doc="Since E2.0"]#[doc=""]#[doc="# Examples"] #[doc="```"]
-#[doc="use emojic::flat::FLAG_TÜRKIYE;"]#[doc="use emojic::Tone;"]#[doc="use emojic::Gender;"]#[doc="use emojic::Hair;"]#[doc="use emojic::Pair;"] #[doc=""]
-#[doc="println!(\"{}\", FLAG_TÜRKIYE); // 🇹🇷 (`U+1F1F9 U+1F1F7`)"] #[doc="# assert_eq!(FLAG_TÜRKIYE.to_string().as_str(), \"🇹🇷\");"]
+#[doc="use emojic::flat::FLAG_TURKIYE;"]#[doc="use emojic::Tone;"]#[doc="use emojic::Gender;"]#[doc="use emojic::Hair;"]#[doc="use emojic::Pair;"] #[doc=""]
+#[doc="println!(\"{}\", FLAG_TURKIYE); // 🇹🇷 (`U+1F1F9 U+1F1F7`)"] #[doc="# assert_eq!(FLAG_TURKIYE.to_string().as_str(), \"🇹🇷\");"]
 #[doc="```"]
-pub static FLAG_TÜRKIYE :  Emoji = Emoji::new("flag: Türkiye", Version(2, 0), "🇹🇷"); // flag: Türkiye
+pub static FLAG_TURKIYE :  Emoji = Emoji::new("flag: Türkiye", Version(2, 0), "🇹🇷"); // flag: Türkiye
 		
 		#[doc="flag: Uganda 🇺🇬"]#[doc=""]#[doc="Since E2.0"]#[doc=""]#[doc="# Examples"] #[doc="```"]
 #[doc="use emojic::flat::FLAG_UGANDA;"]#[doc="use emojic::Tone;"]#[doc="use emojic::Gender;"]#[doc="use emojic::Hair;"]#[doc="use emojic::Pair;"] #[doc=""]
@@ -7938,9 +7938,9 @@ pub static FLAG_ZIMBABWE :  Emoji = Emoji::new("flag: Zimbabwe", Version(2, 0), 
 				
 			],
 			
-			&[ // FLAG_TÜRKIYE
+			&[ // FLAG_TURKIYE
 				
-				&FLAG_TÜRKIYE,
+				&FLAG_TURKIYE,
 				
 			],
 			
@@ -9018,12 +9018,12 @@ pub static FLAG_ZIMBABWE :  Emoji = Emoji::new("flag: Zimbabwe", Version(2, 0), 
 				
 				&FLAG_TUVALU, // FLAG_TUVALU
 				
-			
 				
-				&FLAG_TÜRKIYE, // FLAG_TÜRKIYE
-				
-			
-				
+
+				&FLAG_TURKIYE, // FLAG_TURKIYE
+
+
+
 				&FLAG_UGANDA, // FLAG_UGANDA
 				
 			
@@ -27835,11 +27835,11 @@ pub static BUSTS_IN_SILHOUETTE :  Emoji = Emoji::new("busts in silhouette", Vers
 #[doc="```"]
 pub static BUST_IN_SILHOUETTE :  Emoji = Emoji::new("bust in silhouette", Version(0, 6), "👤"); // bust in silhouette
 		
-		#[doc="family 👪"]#[doc=""]#[doc="Since E0.6"]#[doc=""]#[doc="# Examples"] #[doc="```"]
-#[doc="use emojic::flat::FAMILY;"]#[doc="use emojic::Tone;"]#[doc="use emojic::Gender;"]#[doc="use emojic::Hair;"]#[doc="use emojic::Pair;"] #[doc=""]
-#[doc="println!(\"{}\", FAMILY); // 👪 (`U+1F46A`)"] #[doc="# assert_eq!(FAMILY.to_string().as_str(), \"👪\");"]
+		#[doc="familye 👪"]#[doc=""]#[doc="Since E0.6"]#[doc=""]#[doc="# Examples"] #[doc="```"]
+#[doc="use emojic::flat::FAMILYE;"]#[doc="use emojic::Tone;"]#[doc="use emojic::Gender;"]#[doc="use emojic::Hair;"]#[doc="use emojic::Pair;"] #[doc=""]
+#[doc="println!(\"{}\", FAMILYE); // 👪 (`U+1F46A`)"] #[doc="# assert_eq!(FAMILYE.to_string().as_str(), \"👪\");"]
 #[doc="```"]
-pub static FAMILY :  Emoji = Emoji::new("family", Version(0, 6), "👪"); // family
+pub static FAMILYE :  Emoji = Emoji::new("family", Version(0, 6), "👪"); // family
 		
 		#[doc="family: adult, adult, child 🧑‍🧑‍🧒"]#[doc=""]#[doc="Since E15.1"]#[doc=""]#[doc="# Examples"] #[doc="```"]
 #[doc="use emojic::flat::FAMILY_ADULT_ADULT_CHILD;"]#[doc="use emojic::Tone;"]#[doc="use emojic::Gender;"]#[doc="use emojic::Hair;"]#[doc="use emojic::Pair;"] #[doc=""]
@@ -27911,7 +27911,7 @@ pub static SPEAKING_HEAD :  Emoji = Emoji::new("speaking head", Version(0, 7), "
 			
 			&[ // FAMILY
 				
-				&FAMILY,
+				&FAMILYE,
 				
 			],
 			
@@ -27977,7 +27977,7 @@ pub static SPEAKING_HEAD :  Emoji = Emoji::new("speaking head", Version(0, 7), "
 				
 			
 				
-				&FAMILY, // FAMILY
+				&FAMILYE, // FAMILY
 				
 			
 				

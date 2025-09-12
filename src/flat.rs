@@ -2065,7 +2065,7 @@
 		
 		// FLAG_TÜRKIYE 🇹🇷
 		#[doc(inline)]
-		pub use crate::grouped::flags::country_flag::FLAG_TÜRKIYE;
+		pub use crate::grouped::flags::country_flag::FLAG_TURKIYE;
 		
 		// FLAG_UGANDA 🇺🇬
 		#[doc(inline)]
@@ -4641,7 +4641,7 @@
 		
 		// FAMILY 👪
 		// #[doc(inline)]
-		// pub use crate::grouped::people_and_body::person_symbol::FAMILY;
+		pub use crate::grouped::people_and_body::person_symbol::FAMILYE;
 		
 		// FAMILY_ADULT_ADULT_CHILD 🧑‍🧑‍🧒
 		#[doc(inline)]

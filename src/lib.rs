@@ -7,7 +7,7 @@
 // This property is useful for reasoning about breaking API changes.
 #![deny(unreachable_pub)]
 // Denies invalid links in docs
-#![deny(broken_intra_doc_links)]
+#![deny(rustdoc::broken_intra_doc_links)]
 
 //!
 //! Emoji constants for your rusty strings. This crate is inspired by the Go library
@@ -38,7 +38,7 @@
 //! println!(
 //!     "I'm {} from {}",
 //!     TECHNOLOGIST.gender(Gender::Male),
-//!     FLAG_TURKEY
+//!     FLAG_TURKIYE
 //! );
 //! println!(
 //!     "Different skin tones default {} light {} dark {}",
@@ -78,7 +78,7 @@
 //! ```
 //!
 //! This crate contains emojis constants based on the
-//! [Full Emoji List v13.1](https://unicode.org/Public/emoji/13.1/emoji-test.txt).
+//! [Full Emoji List v16.0](https://unicode.org/Public/emoji/16.0/emoji-test.txt).
 //! Including its categorization:
 //!
 //! ```rust
@@ -92,11 +92,11 @@
 //!
 //! ```rust
 //! # let text =
-//! // Iterates all hand emoji: 👏, 🙏, 🤝, 👐, 🤲, 🙌
+//! // Iterates all hand emoji: 👏, 🙏, 🤝, 🫶, 👐, 🤲, 🙌
 //! emojic::grouped::people_and_body::hands::base_emojis()
 //! #    .map(|e| e.to_string())
 //! #    .collect::<String>();
-//! # assert_eq!("👏🙏🤝👐🤲🙌", text);
+//! # assert_eq!("👏🙏🤝🫶👐🤲🙌", text);
 //! ```
 //!
 //! Additional, it has functions to generate (arbitrary) country and regional flags.
