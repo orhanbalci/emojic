@@ -20,7 +20,7 @@ correctly, especially the newer ones._
 
 ```toml
 [dependencies]
-emojic = "0.5"
+emojic = "0.4"
 ```
 
 ### 🔧 Example
@@ -35,7 +35,7 @@ println!("Hello {}", WAVING_HAND);
 println!(
     "I'm {} from {}",
     TECHNOLOGIST.gender(Gender::Male),
-    FLAG_TURKEY
+    FLAG_TURKIYE
 );
 println!(
     "Different skin tones default {} light {} dark {}",
@@ -75,7 +75,7 @@ Mixing attributes: men & light: 💁🏻‍♂️ and women & dark: 💁🏿‍�
 ```
 
 This crate contains emojis constants based on the
-[Full Emoji List v13.1](https://unicode.org/Public/emoji/13.1/emoji-test.txt).
+[Full Emoji List v16.0](https://unicode.org/Public/emoji/16.0/emoji-test.txt).
 Including its categorization:
 
 ```rust
@@ -88,7 +88,7 @@ assert_eq!(
 As well as iterators to list all the emojis in each group and subgroup:
 
 ```rust
-// Iterates all hand emoji: 👏, 🙏, 🤝, 👐, 🤲, 🙌
+// Iterates all hand emoji: 👏, 🙏, 🤝, 🫶, 👐, 🤲, 🙌
 emojic::grouped::people_and_body::hands::base_emojis()
 ```
 
